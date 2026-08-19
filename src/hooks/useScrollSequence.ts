@@ -302,7 +302,7 @@ export function initScrollSequence() {
         new ScrollSequence({
             canvasId: 'hero-canvas',
             sectionId: 'hero',
-            totalFrames: 293,
+            totalFrames: 300,
             framePath: 'frames/ezgif-frame-',
             frameExt: '.jpg',
             isMain: true

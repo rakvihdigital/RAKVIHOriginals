@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Maison Élégance | Luxury Handbags",
+  title: "Rakvih originals | Luxury collections",
   description: "The premier destination for luxury handbags and accessories.",
 };
 
