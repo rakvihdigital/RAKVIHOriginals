@@ -207,7 +207,7 @@ export function initScrollSequence() {
                 if (overlay.classList.contains('text-first') || overlay.id === 'hero-text-1') {
                     if (this.config.isMain) {
                         startFrame = 32;
-                        endFrame = 65;
+                        endFrame = 40;
                     } else {
                         // New sections: show title right from the start
                         startFrame = 2;

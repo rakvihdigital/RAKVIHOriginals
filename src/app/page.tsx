@@ -104,9 +104,9 @@ export default function Home() {
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">The Collection</span>
                             </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                THE LUXURY<br />
-                                <span className="hero-title-stroke">COLLECTION</span>
+                            <h2 className="hero-luxury-title">
+                                THE LUXURY
+                                <span className="hero-luxury-title-accent">Collection</span>
                             </h2>
                             <p className="hero-desc">Five iconic silhouettes, one timeless vision.</p>
                             <a href="#collections" className="hero-cta-pill">Shop The Drop</a>
