@@ -17,7 +17,7 @@ export default function Home() {
                     <h1 className="hero-title-bold" style={{ marginBottom: "0", whiteSpace: "nowrap" }}>
                         <span style={{ color: "#ffffff" }}>RAKVIH</span> <span style={{ color: "var(--color-gold)" }}>ORIGINALS</span>
                     </h1>
-                    <p className="intro-subtitle" style={{ color: "#ffffff" }}>Elevate your Lifestyle.</p>
+                    <p className="intro-subtitle" style={{ color: "#ffffff" }}>Elevate your Lifestyle</p>
                 </div>
             </div>
 
