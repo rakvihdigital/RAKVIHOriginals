@@ -206,8 +206,8 @@ export function initScrollSequence() {
                 // Frame timings — use class-based detection for reusable sections
                 if (overlay.classList.contains('text-first') || overlay.id === 'hero-text-1') {
                     if (this.config.isMain) {
-                        startFrame = 32;
-                        endFrame = 40;
+                        startFrame = 15;
+                        endFrame = 55;
                     } else {
                         // New sections: show title right from the start
                         startFrame = 2;
@@ -276,11 +276,21 @@ export function initScrollSequence() {
             if (!currentEl) return;
 
             let num = 1;
-            if (progress >= 0.82) num = 6;
-            else if (progress >= 0.60) num = 5;
-            else if (progress >= 0.47) num = 4;
-            else if (progress >= 0.30) num = 3;
-            else if (progress >= 0.15) num = 2;
+            if (this.config.isMain) {
+                if (progress >= 0.900) num = 8;
+                else if (progress >= 0.777) num = 7;
+                else if (progress >= 0.706) num = 6;
+                else if (progress >= 0.612) num = 5;
+                else if (progress >= 0.528) num = 4;
+                else if (progress >= 0.300) num = 3;
+                else if (progress >= 0.150) num = 2;
+            } else {
+                if (progress >= 0.82) num = 6;
+                else if (progress >= 0.60) num = 5;
+                else if (progress >= 0.47) num = 4;
+                else if (progress >= 0.30) num = 3;
+                else if (progress >= 0.15) num = 2;
+            }
             currentEl.textContent = '0' + num;
         }
 
@@ -302,7 +312,7 @@ export function initScrollSequence() {
         new ScrollSequence({
             canvasId: 'hero-canvas',
             sectionId: 'hero',
-            totalFrames: 300,
+            totalFrames: 539,
             framePath: 'frames/ezgif-frame-',
             frameExt: '.jpg',
             isMain: true

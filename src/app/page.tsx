@@ -48,7 +48,31 @@ export default function Home() {
                             <a href="#collections" className="hero-cta-pill">Explore Collection</a>
                         </div>
 
-                        <div className="hero-text-overlay hero-text-right" id="hero-text-2" data-start="0.15" data-end="0.28">
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-new-1" data-start="0.15" data-end="0.25">
+                            <div className="hero-accent-line">
+                                <div className="accent-bar"></div>
+                                <span className="accent-label">The Unveiling</span>
+                            </div>
+                            <h2 className="hero-title-bold hero-title-md">
+                                A NEW<br />
+                                <span className="hero-title-stroke">VISION</span>
+                            </h2>
+                            <p className="hero-desc">Embrace a new standard of luxury, where every curve and contour tells a story.</p>
+                        </div>
+
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-new-2" data-start="0.30" data-end="0.40">
+                            <div className="hero-accent-line">
+                                <div className="accent-bar"></div>
+                                <span className="accent-label">Signature Style</span>
+                            </div>
+                            <h2 className="hero-title-bold hero-title-md">
+                                BEYOND<br />
+                                <span className="hero-title-stroke">BOUNDARIES</span>
+                            </h2>
+                            <p className="hero-desc">Pushing the limits of modern design to create a silhouette that stands apart.</p>
+                        </div>
+
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-2" data-start="0.528" data-end="0.600">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">Craftsmanship</span>
@@ -61,7 +85,7 @@ export default function Home() {
                                 of savoir-faire.</p>
                         </div>
 
-                        <div className="hero-text-overlay hero-text-right" id="hero-text-3" data-start="0.30" data-end="0.45">
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-3" data-start="0.612" data-end="0.695">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">Detail</span>
@@ -74,7 +98,7 @@ export default function Home() {
                                 cannage quilting.</p>
                         </div>
 
-                        <div className="hero-text-overlay hero-text-right" id="hero-text-4" data-start="0.47" data-end="0.58">
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-4" data-start="0.706" data-end="0.766">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">Engineering</span>
@@ -87,7 +111,7 @@ export default function Home() {
                                 reinforced base.</p>
                         </div>
 
-                        <div className="hero-text-overlay hero-text-right" id="hero-text-5" data-start="0.60" data-end="0.72">
+                        <div className="hero-text-overlay hero-text-right" id="hero-text-5" data-start="0.777" data-end="0.844">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">Form</span>
@@ -99,7 +123,7 @@ export default function Home() {
                             <p className="hero-desc">Precision and artistry converge into a singular expression of luxury.</p>
                         </div>
 
-                        <div className="hero-text-overlay" id="hero-text-6" data-start="0.97" data-end="0.997">
+                        <div className="hero-text-overlay" id="hero-text-6" data-start="0.983" data-end="0.998">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
                                 <span className="accent-label">The Collection</span>
@@ -122,7 +146,7 @@ export default function Home() {
                         <div className="hero-counter" id="hero-counter">
                             <span className="counter-current">01</span>
                             <div className="counter-divider"></div>
-                            <span className="counter-total">06</span>
+                            <span className="counter-total">08</span>
                         </div>
                     </div>
                 </div>
