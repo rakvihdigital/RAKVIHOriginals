@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
-import { initScrollSequence } from '../hooks/useScrollSequence';
+import { initScrollSequence } from '@/hooks/useScrollSequence';
 
 export default function Home() {
     useEffect(() => {
