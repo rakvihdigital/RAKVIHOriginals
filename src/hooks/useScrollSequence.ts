@@ -44,6 +44,7 @@ export function initScrollSequence() {
             this.resizeCanvas();
             this.preloadImages();
             this.setupScrollListener();
+            this.updateHeroText(0);
 
             window.addEventListener('resize', debounce(this.resizeCanvas, 200));
             this.state.animating = true;
@@ -188,11 +189,8 @@ export function initScrollSequence() {
         // ─── HERO TEXT OVERLAYS ───
         updateHeroText(frame) {
             const overlays = this.state.heroSection.querySelectorAll('.hero-text-overlay');
-            const isMobile = window.innerWidth <= 1024;
 
             overlays.forEach((overlay) => {
-                // No dynamic reposition – keep original static placement
-
                 let opacity = 0;
                 let translateY = 30;
                 let blur = 4;
@@ -203,21 +201,28 @@ export function initScrollSequence() {
                 let fadeInFrames = 3;
                 let fadeOutFrames = 3;
 
-                // Frame timings — use class-based detection for reusable sections
-                if (overlay.classList.contains('text-first') || overlay.id === 'hero-text-1') {
+                const isFirst = overlay.classList.contains('text-first') || 
+                                (overlay.id && overlay.id.endsWith('-text-1')) || 
+                                overlay.id === 'hero-text-1';
+
+                const isLast = overlay.classList.contains('text-last') || 
+                               (overlay.id && overlay.id.endsWith('-text-6')) || 
+                               overlay.id === 'hero-text-6';
+
+                if (isFirst) {
+                    startFrame = 0;
+                    fadeInFrames = 0; // ZERO delay/fade-in! 100% visible immediately at frame 0 and frame 1!
                     if (this.config.isMain) {
-                        startFrame = 15;
-                        endFrame = 55;
+                        endFrame = 0.10 * (this.config.totalFrames - 1);
+                        fadeOutFrames = 12;
                     } else {
-                        // New sections: show title right from the start
-                        startFrame = 2;
                         endFrame = 0.12 * (this.config.totalFrames - 1);
-                        fadeInFrames = 5;
+                        fadeOutFrames = 8;
                     }
-                } else if (overlay.classList.contains('text-last') || overlay.id === 'hero-text-6') {
+                } else if (isLast) {
                     if (this.config.isMain) {
-                        // Original hero: appears earlier so it has time to fade in fully
-                        startFrame = this.config.totalFrames - 15;
+                        // Original hero: appears at 86% so it has plenty of time to shine until the end
+                        startFrame = 0.86 * (this.config.totalFrames - 1);
                     } else {
                         // New sections: appear at 80% progress so there's plenty of time
                         startFrame = 0.80 * (this.config.totalFrames - 1);
@@ -238,7 +243,7 @@ export function initScrollSequence() {
                     const fadeInEnd = startFrame + fadeInFrames;
                     const fadeOutStart = endFrame - fadeOutFrames;
 
-                    if (frame < fadeInEnd) {
+                    if (fadeInFrames > 0 && frame < fadeInEnd) {
                         const t = easeOutCubic((frame - startFrame) / fadeInFrames);
                         opacity = t;
                         translateY = 30 * (1 - t);
@@ -255,16 +260,12 @@ export function initScrollSequence() {
                     }
                 }
 
-                if (overlay.classList.contains('text-first') || overlay.classList.contains('text-last') ||
-                    overlay.id === 'hero-text-1' || overlay.id === 'hero-text-6' || !this.config.isMain) {
-                    // Bottom-left positioning (all new section overlays + original first/last)
-                    overlay.style.cssText = `opacity:${opacity};transform:translateY(${translateY}px) scale(${scale});filter:blur(${blur}px);will-change:transform,opacity,filter; top:auto!important; right:auto!important; bottom:14%!important; left:6%!important; text-align:left!important; align-items:flex-start!important; justify-content:flex-start!important;`;
-                } else if (isMobile) {
-                    overlay.style.cssText = `opacity:${opacity};transform:translateY(${translateY}px) scale(${scale});filter:blur(${blur}px);will-change:transform,opacity,filter;`;
-                } else {
-                    // Original hero — right side overlays
-                    overlay.style.cssText = `opacity:${opacity};transform:translateY(-50%) translateX(${20 * (1 - opacity)}px) scale(${scale});filter:blur(${blur}px);will-change:transform,opacity,filter;`;
-                }
+                const pointerEvents = (opacity > 0.1 && (isFirst || isLast || overlay.querySelector('a'))) ? 'auto' : 'none';
+                overlay.style.opacity = String(opacity);
+                overlay.style.transform = `translateY(${translateY}px) scale(${scale})`;
+                overlay.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+                overlay.style.pointerEvents = pointerEvents;
+                overlay.style.willChange = opacity > 0 ? 'transform, opacity, filter' : 'auto';
             });
         }
 
@@ -277,13 +278,13 @@ export function initScrollSequence() {
 
             let num = 1;
             if (this.config.isMain) {
-                if (progress >= 0.900) num = 8;
-                else if (progress >= 0.777) num = 7;
-                else if (progress >= 0.706) num = 6;
-                else if (progress >= 0.612) num = 5;
-                else if (progress >= 0.528) num = 4;
-                else if (progress >= 0.300) num = 3;
-                else if (progress >= 0.150) num = 2;
+                if (progress >= 0.86) num = 8;
+                else if (progress >= 0.72) num = 7;
+                else if (progress >= 0.60) num = 6;
+                else if (progress >= 0.48) num = 5;
+                else if (progress >= 0.36) num = 4;
+                else if (progress >= 0.24) num = 3;
+                else if (progress >= 0.12) num = 2;
             } else {
                 if (progress >= 0.82) num = 6;
                 else if (progress >= 0.60) num = 5;
@@ -312,9 +313,9 @@ export function initScrollSequence() {
         new ScrollSequence({
             canvasId: 'hero-canvas',
             sectionId: 'hero',
-            totalFrames: 539,
-            framePath: 'frames/ezgif-frame-',
-            frameExt: '.jpg',
+            totalFrames: 844,
+            framePath: 'hero1-frames-full/ezgif-frame-',
+            frameExt: '.webp',
             isMain: true
         });
 
@@ -324,8 +325,8 @@ export function initScrollSequence() {
                 canvasId: 'hero-canvas-2',
                 sectionId: 'hero2',
                 totalFrames: 300,
-                framePath: 'frames2/ezgif-frame-',
-                frameExt: '.jpg',
+                framePath: 'hero2-frames-png/ezgif-frame-',
+                frameExt: '.webp',
                 isMain: false
             });
         }
@@ -333,9 +334,9 @@ export function initScrollSequence() {
             new ScrollSequence({
                 canvasId: 'hero-canvas-3',
                 sectionId: 'hero3',
-                totalFrames: 300,
-                framePath: 'frames3/ezgif-frame-',
-                frameExt: '.jpg',
+                totalFrames: 299,
+                framePath: 'hero3-frames-png/ezgif-frame-',
+                frameExt: '.webp',
                 isMain: false
             });
         }
@@ -354,8 +355,8 @@ export function initScrollSequence() {
                 canvasId: 'hero-canvas-5',
                 sectionId: 'hero5',
                 totalFrames: 300,
-                framePath: 'frames5/ezgif-frame-',
-                frameExt: '.jpg',
+                framePath: 'hero5-frames-png/ezgif-frame-',
+                frameExt: '.webp',
                 isMain: false
             });
         }
@@ -364,8 +365,8 @@ export function initScrollSequence() {
                 canvasId: 'hero-canvas-6',
                 sectionId: 'hero6',
                 totalFrames: 300,
-                framePath: 'frames6/ezgif-frame-',
-                frameExt: '.jpg',
+                framePath: 'hero6-frames-png/ezgif-frame-',
+                frameExt: '.webp',
                 isMain: false
             });
         }
