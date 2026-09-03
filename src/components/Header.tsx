@@ -3,31 +3,34 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingCart, User, Heart } from "lucide-react";
+import { ShoppingCart, User, Heart, LogOut } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const PORTAL_ROUTES = [
   "/dashboard", "/brands", "/categorysetup", "/products", "/attribute",
   "/coupons", "/payments", "/orderupdate", "/pos", "/productreport",
   "/orderreport", "/hero", "/header", "/middle", "/bottom", "/insta",
   "/about-top", "/about-identity", "/about-bottom", "/review", "/site-info",
-  "/videos-admin", "/createsub", "/messages", "/customer", "/login",
+  "/videos-admin", "/createsub", "/messages", "/customer",
 ];
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
+  const { isAuthenticated, cartCount, wishlistCount, logout, user, customer } = useAuth();
+
   const isPortal = pathname ? PORTAL_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/")) : false;
 
-  // Static mocked states as requested
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [cartCount, setCartCount] = useState(0);
+  const displayName = customer?.name || (user?.email ? user.email.split("@")[0] : "VIP Member");
 
   // Close menu on route change
   useEffect(() => {
     setMenuOpen(false);
+    setUserDropdownOpen(false);
   }, [pathname]);
 
   // Scroll detection
@@ -51,11 +54,10 @@ export default function Header() {
     };
   }, [menuOpen]);
 
-  // NEW CONTENTS FROM USER'S CODE
+  // NAVIGATION ITEMS: Collection Hub replacing Fashion Studio & Videos removed
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Fashion Studio", href: "/Gproducts" },
-    { name: "Videos", href: "/videos" },
+    { name: "Collection Hub", href: "/collection-hub" },
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
@@ -71,37 +73,125 @@ export default function Header() {
       {/* ── DESKTOP HEADER WITH LEFT BRAND TITLE & RIGHT EXPANDING DRAWER ── */}
       <header className={`desktop-header-bar ${scrolled ? "is-scrolled" : ""}`}>
         <div className="desktop-header-inner flex items-center justify-between w-full">
-          {/* Left Corner: Aesthetic Brand Title */}
+          {/* Left Corner: Aesthetic Brand Title (Single line bold with rounded pill) */}
           <Link href="/" className="header-brand-mark" aria-label="RAKVIH Originals">
-            <span className="brand-mark-main">RAKVIH</span>
-            <span className="brand-mark-sub">ORIGINALS</span>
+            <span className="brand-mark-single-line">
+              RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
+            </span>
           </Link>
 
           {/* Right Side: Horizontal Expanding Drawer & Actions */}
           <div className="flex items-center gap-6">
             
-            {/* Quick Actions (Cart, Wishlist, Account) */}
-            <div className="flex items-center gap-4 text-white pointer-events-auto mix-blend-difference">
+            {/* Quick Actions (Cart & Wishlist visible ONLY after login) */}
+            <div className="flex items-center gap-3 text-white pointer-events-auto">
               {isAuthenticated ? (
                 <>
-                  <Link href="/wishlist" className="hover:text-brand-gold transition-colors">
-                    <Heart size={18} />
+                  <Link
+                    href="/wishlist"
+                    className="desktop-action-icon-btn relative"
+                    title="Saved Wishlist"
+                  >
+                    <Heart size={16} />
+                    {wishlistCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center shadow-md">
+                        {wishlistCount}
+                      </span>
+                    )}
                   </Link>
-                  <Link href="/cart" className="hover:text-brand-gold transition-colors relative">
-                    <ShoppingCart size={18} />
+
+                  <Link
+                    href="/cart"
+                    className="desktop-action-icon-btn relative"
+                    title="Shopping Bag"
+                  >
+                    <ShoppingCart size={16} />
                     {cartCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center shadow-md">
                         {cartCount}
                       </span>
                     )}
                   </Link>
-                  <Link href="/order" className="hover:text-brand-gold transition-colors">
-                    <User size={18} />
-                  </Link>
+
+                  {/* Desktop User Name & Dropdown */}
+                  <div className="relative user-dropdown-container">
+                    <button
+                      type="button"
+                      onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                      className="desktop-user-pill-btn"
+                      aria-label="User account menu"
+                    >
+                      <div className="desktop-avatar-circle">
+                        <User size={13} className="text-brand-gold" />
+                      </div>
+                      <span className="desktop-user-display-name truncate">
+                        {displayName}
+                      </span>
+                      <svg
+                        width="10"
+                        height="10"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        className={`transition-transform duration-200 ${
+                          userDropdownOpen ? "rotate-180 text-brand-gold" : "opacity-60"
+                        }`}
+                      >
+                        <path d="M6 9l6 6 6-6" />
+                      </svg>
+                    </button>
+
+                    {/* Luxury Dropdown Menu */}
+                    {userDropdownOpen && (
+                      <div className="desktop-user-dropdown-menu">
+                        <div className="dropdown-user-header">
+                          <span className="dropdown-vip-pill">VIP PATRON</span>
+                          <div className="dropdown-user-name truncate">
+                            {displayName}
+                          </div>
+                          <div className="dropdown-user-email truncate">
+                            {user?.email}
+                          </div>
+                        </div>
+
+                        <div className="dropdown-menu-divider" />
+
+                        <Link
+                          href="/profile"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="dropdown-menu-item"
+                        >
+                          <User size={14} className="text-brand-gold" />
+                          <span>My Profile & Orders</span>
+                        </Link>
+
+                        <div className="dropdown-menu-divider" />
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setUserDropdownOpen(false);
+                            logout();
+                          }}
+                          className="dropdown-menu-item dropdown-exit-item w-full text-left"
+                        >
+                          <LogOut size={14} />
+                          <span>Sign Out</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </>
               ) : (
-                <button onClick={() => router.push('/login')} className="text-xs font-bold uppercase tracking-widest hover:text-brand-gold transition-colors">
-                  Login
+                <button
+                  onClick={() => router.push("/login")}
+                  className="desktop-user-pill-btn text-xs font-bold uppercase tracking-wider hover:text-brand-gold"
+                >
+                  <div className="desktop-avatar-circle">
+                    <User size={13} className="text-brand-gold" />
+                  </div>
+                  <span>Login / Register</span>
                 </button>
               )}
             </div>
@@ -125,14 +215,6 @@ export default function Header() {
                       );
                     })}
                   </nav>
-                  <button
-                    type="button"
-                    className="drawer-inline-close"
-                    onClick={() => setMenuOpen(false)}
-                    aria-label="Close menu drawer"
-                  >
-                    ✕
-                  </button>
                 </div>
               </div>
 
@@ -149,7 +231,7 @@ export default function Header() {
                   <span className="h-stripe h-stripe-2"></span>
                   <span className="h-stripe h-stripe-3"></span>
                 </div>
-                <span className="drawer-btn-text">{menuOpen ? "CLOSE" : "MENU"}</span>
+                {!menuOpen && <span className="drawer-btn-text">MENU</span>}
               </button>
             </div>
           </div>
@@ -158,19 +240,35 @@ export default function Header() {
 
       {/* ── MOBILE HEADER (MOBILE ONLY) ── */}
       <div className="mobile-header-bar">
-        <Link href="/" className="mobile-header-logo">
-          <span>RAKVIH</span>
+        {/* Left: Desktop-matching Single-line Brand Mark Pill */}
+        <Link href="/" className="header-brand-mark mobile-header-brand" aria-label="RAKVIH Originals">
+          <span className="brand-mark-single-line">
+            RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
+          </span>
         </Link>
 
-        <div className="flex items-center gap-4">
-          <Link href="/cart" className="relative text-white pointer-events-auto">
-            <ShoppingCart size={18} />
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
+        <div className="flex items-center gap-3">
+          {isAuthenticated && (
+            <>
+              <Link href="/wishlist" className="mobile-header-icon-btn relative text-white" aria-label="Wishlist">
+                <Heart size={18} />
+                {wishlistCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {wishlistCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link href="/cart" className="mobile-header-icon-btn relative text-white" aria-label="Shopping Bag">
+                <ShoppingCart size={18} />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-brand-gold text-brand-blue text-[9px] font-bold rounded-full flex items-center justify-center">
+                    {cartCount}
+                  </span>
+                )}
+              </Link>
+            </>
+          )}
 
           <button
             type="button"
@@ -191,8 +289,18 @@ export default function Header() {
       <div className={`mobile-sidebar-drawer ${menuOpen ? "mobile-drawer-open" : ""}`}>
         <div className="mobile-backdrop" onClick={() => setMenuOpen(false)}></div>
         <aside className="mobile-sidebar-panel">
+          {/* Top Bar */}
           <div className="mobile-sidebar-top">
-            <span className="mobile-panel-title">DIRECTORY</span>
+            <Link
+              href="/"
+              onClick={() => setMenuOpen(false)}
+              className="header-brand-mark mobile-sidebar-brand-mark"
+              aria-label="RAKVIH Originals"
+            >
+              <span className="brand-mark-single-line">
+                RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
+              </span>
+            </Link>
             <button
               type="button"
               className="mobile-close-btn"
@@ -202,52 +310,100 @@ export default function Header() {
               ✕
             </button>
           </div>
+
+          {/* User Account Section (Top Highlight) */}
+          <div className="mobile-auth-section">
+            {!isAuthenticated ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  router.push("/login");
+                }}
+                className="mobile-auth-login-card"
+              >
+                <div className="mobile-auth-icon-circle">
+                  <User size={18} className="text-brand-gold" />
+                </div>
+                <div className="text-left">
+                  <div className="mobile-auth-main-text">LOGIN / SIGN UP</div>
+                  <div className="mobile-auth-sub-text">Access VIP Concierge & Orders</div>
+                </div>
+                <span className="mobile-auth-arrow">→</span>
+              </button>
+            ) : (
+              <div className="mobile-user-profile-card">
+                <div className="flex items-center gap-3">
+                  <div className="mobile-user-avatar-circle">
+                    <User size={18} className="text-brand-gold" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <span className="mobile-vip-badge">VIP PATRON</span>
+                    </div>
+                    <h4 className="mobile-user-name truncate">
+                      {customer?.name || (user?.email ? user.email.split("@")[0] : "VIP Member")}
+                    </h4>
+                    <p className="mobile-user-email truncate">{user?.email}</p>
+                  </div>
+                </div>
+
+                <div className="mobile-user-quick-links">
+                  <Link
+                    href="/profile"
+                    className="mobile-quick-link-btn"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span>Profile & Orders</span>
+                    <span>→</span>
+                  </Link>
+                  <Link
+                    href="/wishlist"
+                    className="mobile-quick-link-btn"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span>Wishlist ({wishlistCount})</span>
+                    <span>→</span>
+                  </Link>
+                  <Link
+                    href="/cart"
+                    className="mobile-quick-link-btn"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    <span>Shopping Bag ({cartCount})</span>
+                    <span>→</span>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      logout();
+                    }}
+                    className="mobile-quick-link-btn text-rose-400 hover:text-rose-300"
+                  >
+                    <span>Sign Out</span>
+                    <LogOut size={13} />
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
           
+          {/* Main Navigation List */}
           <ul className="mobile-sidebar-list">
-            {navItems.map((item, idx) => (
+            {navItems.map((item) => (
               <li key={item.href}>
                 <Link
                   href={item.href}
                   className={`mobile-sidebar-link ${pathname === item.href ? "is-active" : ""}`}
                   onClick={() => setMenuOpen(false)}
                 >
-                  <span className="mobile-nav-num">0{idx + 1}</span>
                   <span className="mobile-nav-title">{item.name}</span>
                   <span className="mobile-nav-arrow">→</span>
                 </Link>
               </li>
             ))}
-
-            {/* Mobile Auth Links */}
-            {!isAuthenticated ? (
-              <li>
-                <button
-                  onClick={() => {
-                    setMenuOpen(false);
-                    router.push('/login');
-                  }}
-                  className="mobile-sidebar-link text-brand-gold mt-4"
-                >
-                  <span className="mobile-nav-title">LOGIN / SIGNUP</span>
-                </button>
-              </li>
-            ) : (
-              <li>
-                <Link
-                  href="/order"
-                  className="mobile-sidebar-link mt-4"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  <span className="mobile-nav-title">MY ACCOUNT</span>
-                </Link>
-              </li>
-            )}
           </ul>
-
-          <div className="mobile-sidebar-bottom">
-            <span className="mobile-salon-label">VIP CONCIERGE</span>
-            <p>concierge@rakvihoriginals.com</p>
-          </div>
         </aside>
       </div>
     </>

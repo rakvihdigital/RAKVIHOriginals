@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gem, Sparkles, Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from "lucide-react";
+import { Gem, Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from "lucide-react";
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("admin@rakvihoriginals.com");
   const [password, setPassword] = useState("••••••••••••");

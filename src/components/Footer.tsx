@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -26,32 +26,27 @@ const PORTAL_ROUTES = [
   "/about-bottom",
   "/review",
   "/site-info",
-  "/videos",
+  "/videos-admin",
   "/createsub",
   "/messages",
   "/customer",
-  "/login",
 ];
 
+const SOCIAL_LINKS = {
+  instagram: "https://www.instagram.com/rakvih_solutions_pvt_ltd?igsh=N2xybTAzYW10bHRm",
+  facebook: "https://www.facebook.com/share/15UG4Sd23e/",
+  google: "https://www.google.com/search?gs_ssp=eJzj4tVP1zc0LC5MSbLINY83YLRSNagwTkpMNbQ0TDQ1TbE0NEwytTKoMDU0ME5LMTVPsTQytUhMMfNiK0rMLsvMAAAgchGg&q=rakvih&oq=rakvih&gs_lcrp=EgZjaHJvbWUqEggBEC4YJxivARjHARiABBiKBTIGCAAQRRg8MhIIARAuGCcYrwEYxwEYgAQYigUyDAgCECMYJxjwBRieBjIRCAMQABgKGAsYgwEYsQMYgAQyDggEEC4YChgLGLEDGIAEMgYIBRBFGDwyBggGEEUYPDIGCAcQRRg80gEIMzY5OWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+};
+
 export default function Footer() {
-  const [subscribed, setSubscribed] = useState(false);
-  const [email, setEmail] = useState("");
   const pathname = usePathname();
 
   const isPortal = pathname ? PORTAL_ROUTES.some((route) => pathname === route || pathname.startsWith(route + "/")) : false;
   if (isPortal) return null;
 
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (email) {
-      setSubscribed(true);
-      setEmail("");
-    }
-  };
-
   const quickLinks = [
     { name: "Home", href: "/" },
+    { name: "Collection Hub", href: "/collection-hub" },
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
@@ -76,7 +71,7 @@ export default function Footer() {
       <div className="footer-container">
         {/* Main 4-Column Grid */}
         <div className="footer-main-grid">
-          {/* Column 1: Brand Info */}
+          {/* Column 1: Brand Info & Socials */}
           <div className="footer-col brand-col">
             <Link href="/" className="footer-brand-logo">
               <span className="logo-main">RAKVIH</span>
@@ -89,11 +84,60 @@ export default function Footer() {
               <a href="mailto:contact@rakvihoriginals.com" className="footer-email-link">
                 contact@rakvihoriginals.com
               </a>
-              <span className="footer-phone-snippet">+1 (212) 888-0018</span>
+              <a href="tel:+918296392047" className="footer-phone-snippet" style={{ color: "rgba(255, 255, 255, 0.7)", textDecoration: "none" }}>
+                +91 82963 92047
+              </a>
+            </div>
+
+            {/* Social Media Links */}
+            <div className="footer-social-row">
+              {/* Instagram */}
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-social-btn"
+                title="Instagram @rakvih_solutions_pvt_ltd"
+                aria-label="Instagram"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                  <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                  <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                </svg>
+              </a>
+
+              {/* Facebook */}
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-social-btn"
+                title="Facebook"
+                aria-label="Facebook"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                </svg>
+              </a>
+
+              {/* Google */}
+              <a
+                href={SOCIAL_LINKS.google}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-social-btn"
+                title="Google Business Listing"
+                aria-label="Google"
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2a9.96 9.96 0 0 0-7.07 2.93A10 10 0 0 0 2 12c0 5.52 4.48 10 10 10 4.97 0 9.17-3.64 9.88-8.4H12v-3.6h11.8c.13.63.2 1.29.2 2 0 6.63-5.37 12-12 12C5.37 24 0 18.63 0 12S5.37 0 12 0c3.27 0 6.27 1.25 8.54 3.32l-2.7 2.7C16.42 4.6 14.33 3.8 12 3.8z" />
+                </svg>
+              </a>
             </div>
           </div>
 
-          {/* Column 2: Quick Links (All Header Links) */}
+          {/* Column 2: Quick Links */}
           <div className="footer-col">
             <h4 className="footer-col-title">QUICK LINKS</h4>
             <ul className="footer-links-list quick-links-grid">
@@ -117,32 +161,40 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 4: Newsletter */}
-          <div className="footer-col newsletter-col">
-            <h4 className="footer-col-title">NEWSLETTER</h4>
-            <p className="newsletter-desc">
-              Subscribe to receive private previews of new editions and private showroom invitations.
-            </p>
+          {/* Column 4: Corporate Office & Atelier Address */}
+          <div className="footer-col address-col">
+            <h4 className="footer-col-title">CORPORATE ATELIER</h4>
+            <div style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "0.82rem", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <p style={{ margin: 0 }}>
+                238, 2nd Main, 2nd Cross, Attur Layout, Yelahanka, Bengaluru, Karnataka 560064
+              </p>
 
-            {subscribed ? (
-              <div className="footer-subscribed-msg">
-                <span>✓ Thank you for subscribing.</span>
+              <div>
+                <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", fontWeight: 700 }}>
+                  Official Email
+                </span>
+                <a
+                  href="https://rakvih.in/contact.html#"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "#ffffff", textDecoration: "none" }}
+                >
+                  office@rakvih.in
+                </a>
               </div>
-            ) : (
-              <form className="footer-newsletter-form" onSubmit={handleSubscribe}>
-                <input
-                  type="email"
-                  placeholder="Enter your email address"
-                  className="newsletter-input"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <button type="submit" className="newsletter-submit-btn">
-                  <span>SUBSCRIBE</span>
-                </button>
-              </form>
-            )}
+
+              <div>
+                <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", fontWeight: 700 }}>
+                  Direct Helpline
+                </span>
+                <a
+                  href="tel:+918296392047"
+                  style={{ color: "#ffffff", textDecoration: "none" }}
+                >
+                  +91 82963 92047
+                </a>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -154,7 +206,17 @@ export default function Footer() {
           <div className="footer-legal-links">
             <Link href="/privacy-policy">Privacy Policy</Link>
             <Link href="/terms">Terms & Conditions</Link>
-            <Link href="/contact">Showrooms: Paris • Milan • New York • Dubai</Link>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ color: "rgba(255, 255, 255, 0.45)" }}>Designed &Developed by :- </span>
+              <a
+                href="https://rakvih.in/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="footer-dev-link"
+              >
+                RAKVIH
+              </a>
+            </span>
           </div>
         </div>
       </div>

@@ -1,88 +1,289 @@
-import React from "react";
+"use client";
+
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
+import { fetchProductsBySubcategoryIds, StoreProduct } from "@/lib/fetchProducts";
+import { ProductCard } from "@/components/ProductCard";
+import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 
-export const metadata = {
-  title: "Designer Eyewear & Sunglasses | RAKVIH Originals",
-  description: "Sculpted Italian acetate frames with 24K gold plated hinges and Carl Zeiss polarized optics.",
-};
-
-const products = [
-  { id: 1, name: "Millionaires Deep Bevel Noir", price: "$890", material: "Hand-Milled Acetate & Gold S-Lock Hinges", img: "/sunglasses.webp", tag: "Iconic" },
-  { id: 2, name: "Aviateur Monogram Rimless", price: "$980", material: "Titanium Chassis & Laser Engraved Lenses", img: "/sunglasses 2.webp", tag: "New Drop" },
-  { id: 3, name: "Cat-Eye Tortoiseshell Privé", price: "$780", material: "Vintage Italian Acetate & UV400 Optics", img: "/sun glasses 3.webp", tag: "Atelier" },
-  { id: 4, name: "Geometric Shield Gold Edition", price: "$1,100", material: "24K Gold Plated Bridge & Carl Zeiss Glass", img: "/sunglasses 4.webp", tag: "Limited Privé" },
-  { id: 5, name: "Classic Wayfarer Black Crystal", price: "$720", material: "Polarized Mineral Glass & Hand-Polished Temples", img: "/sunglasses 5.webp", tag: "Signature" },
-  { id: 6, name: "Oversized Square Havana", price: "$850", material: "Japanese Titanium Core & Warm Amber Tint", img: "/sunglasses 6.webp", tag: "Runway" },
-];
+const EYEWEAR_SUBCATEGORY_IDS = [8];
 
 export default function EyewearPage() {
+  const [allEyewear, setAllEyewear] = useState<StoreProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedBrand, setSelectedBrand] = useState("All");
+  const [selectedGender, setSelectedGender] = useState("All");
+  const [selectedPrice, setSelectedPrice] = useState("All");
+  const [sortBy, setSortBy] = useState("featured");
+
+  useEffect(() => {
+    async function loadEyewear() {
+      setIsLoading(true);
+      const products = await fetchProductsBySubcategoryIds(EYEWEAR_SUBCATEGORY_IDS);
+      setAllEyewear(products);
+      setIsLoading(false);
+    }
+    loadEyewear();
+  }, []);
+
+  // Compute available brands
+  const availableBrands = useMemo(() => {
+    const brandsSet = new Set<string>();
+    allEyewear.forEach((item) => {
+      if (item.brandName) brandsSet.add(item.brandName);
+    });
+    return Array.from(brandsSet).sort();
+  }, [allEyewear]);
+
+  // Multi-Filter and Sorting
+  const filteredEyewear = useMemo(() => {
+    let result = [...allEyewear];
+
+    // Search Query
+    if (searchQuery.trim() !== "") {
+      const q = searchQuery.toLowerCase();
+      result = result.filter(
+        (item) =>
+          item.name.toLowerCase().includes(q) ||
+          item.brandName.toLowerCase().includes(q) ||
+          (item.sku && item.sku.toLowerCase().includes(q))
+      );
+    }
+
+    // Brand Filter
+    if (selectedBrand !== "All") {
+      result = result.filter((item) => item.brandName === selectedBrand);
+    }
+
+    // Gender Filter
+    if (selectedGender !== "All") {
+      result = result.filter((item) => item.gender === selectedGender);
+    }
+
+    // Price Filter
+    if (selectedPrice === "Under 5000") {
+      result = result.filter((item) => item.priceValue > 0 && item.priceValue < 5000);
+    } else if (selectedPrice === "5000 - 10000") {
+      result = result.filter((item) => item.priceValue >= 5000 && item.priceValue <= 10000);
+    } else if (selectedPrice === "Over 10000") {
+      result = result.filter((item) => item.priceValue > 10000);
+    }
+
+    // Sort
+    if (sortBy === "price-low-high") {
+      result.sort((a, b) => a.priceValue - b.priceValue);
+    } else if (sortBy === "price-high-low") {
+      result.sort((a, b) => b.priceValue - a.priceValue);
+    } else if (sortBy === "name-az") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return result;
+  }, [allEyewear, searchQuery, selectedBrand, selectedGender, selectedPrice, sortBy]);
+
+  const hasActiveFilters =
+    searchQuery.trim() !== "" ||
+    selectedBrand !== "All" ||
+    selectedGender !== "All" ||
+    selectedPrice !== "All" ||
+    sortBy !== "featured";
+
+  const clearAllFilters = () => {
+    setSearchQuery("");
+    setSelectedBrand("All");
+    setSelectedGender("All");
+    setSelectedPrice("All");
+    setSortBy("featured");
+  };
+
   return (
     <main className="subpage-wrapper">
+      {/* Hero Section */}
       <section className="subpage-hero">
         <div className="subpage-hero-inner">
           <div className="subpage-breadcrumbs">
-            <Link href="/">Home</Link> <span>/</span> <span>Collections</span> <span>/</span> <span className="active">Eyewear</span>
+            <Link href="/">Home</Link> <span>/</span> <Link href="/collection-hub">Collections</Link> <span>/</span>{" "}
+            <span className="active">Eyewear</span>
           </div>
           <div className="hero-accent-line">
             <div className="accent-bar"></div>
             <span className="accent-label">Haute Optique</span>
           </div>
           <h1 className="subpage-title">
-            LUXURY <span className="hero-title-stroke">EYEWEAR</span>
+            DESIGNER <span className="hero-title-stroke">EYEWEAR</span>
           </h1>
           <p className="subpage-subtitle">
-            Engineered with deep-beveled Japanese acetate, hand-mounted hinges, and certified high-definition UV filtration.
+            Crafted from high-density Japanese acetate and beta-titanium, fitted with certified UV400 anti-reflective lenses.
           </p>
         </div>
       </section>
 
+      {/* Grid & Filter Section */}
       <section className="subpage-grid-section">
         <div className="subpage-container">
-          <div className="grid-meta-bar">
-            <span className="result-count">Showing 6 Sculpted Frames</span>
-            <div className="grid-filter-pills">
-              <button className="filter-pill active">All Eyewear</button>
-              <button className="filter-pill">Acetate Shield</button>
-              <button className="filter-pill">Titanium Aviator</button>
-              <button className="filter-pill">Cat-Eye</button>
+          {/* FUNCTIONAL FILTERS BAR */}
+          <div
+            className="grid-meta-bar"
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "15px",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "20px 0",
+              borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+              marginBottom: "30px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
+              <span className="result-count" style={{ fontWeight: 700, fontSize: "14px", color: "#ffffff" }}>
+                Showing {filteredEyewear.length} Luxury Frames
+              </span>
+              {hasActiveFilters && (
+                <button
+                  onClick={clearAllFilters}
+                  style={{
+                    background: "rgba(196, 161, 116, 0.15)",
+                    border: "1px solid rgba(196, 161, 116, 0.35)",
+                    color: "var(--color-gold)",
+                    padding: "4px 12px",
+                    borderRadius: "999px",
+                    fontSize: "12px",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                  }}
+                >
+                  Reset Filters ✕
+                </button>
+              )}
+            </div>
+
+            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+              {/* Search Input */}
+              <input
+                type="text"
+                placeholder="Search sunglasses..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="filter-input-glass"
+                style={{ minWidth: "190px" }}
+              />
+
+              {/* Brand Dropdown */}
+              <select
+                value={selectedBrand}
+                onChange={(e) => setSelectedBrand(e.target.value)}
+                className="filter-select-glass"
+              >
+                <option value="All">All Brands ({availableBrands.length})</option>
+                {availableBrands.map((b) => (
+                  <option key={b} value={b}>
+                    {b}
+                  </option>
+                ))}
+              </select>
+
+              {/* Gender Dropdown */}
+              <select
+                value={selectedGender}
+                onChange={(e) => setSelectedGender(e.target.value)}
+                className="filter-select-glass"
+              >
+                <option value="All">All Genders</option>
+                <option value="Men">Men</option>
+                <option value="Women">Women</option>
+                <option value="Unisex">Unisex</option>
+              </select>
+
+              {/* Price Dropdown */}
+              <select
+                value={selectedPrice}
+                onChange={(e) => setSelectedPrice(e.target.value)}
+                className="filter-select-glass"
+              >
+                <option value="All">All Prices</option>
+                <option value="Under 5000">Under ₹5,000</option>
+                <option value="5000 - 10000">₹5,000 - ₹10,000</option>
+                <option value="Over 10000">Over ₹10,000</option>
+              </select>
+
+              {/* Sort By */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="filter-select-glass"
+              >
+                <option value="featured">Sort: Featured</option>
+                <option value="price-low-high">Price: Low to High</option>
+                <option value="price-high-low">Price: High to Low</option>
+                <option value="name-az">Name: A to Z</option>
+              </select>
             </div>
           </div>
 
-          <div className="luxury-product-grid">
-            {products.map((item) => (
-              <div key={item.id} className="luxury-product-card">
-                <div className="product-image-box">
-                  <span className="product-badge">{item.tag}</span>
-                  <img src={item.img} alt={item.name} className="product-img" loading="lazy" />
-                  <div className="product-card-hover-overlay">
-                    <Link href="/contact" className="hover-inquire-btn">
-                      Request Optical Fitting
-                    </Link>
-                  </div>
-                </div>
-                <div className="product-info-box">
-                  <span className="product-material">{item.material}</span>
-                  <h3 className="product-name">{item.name}</h3>
-                  <div className="product-price-row">
-                    <span className="product-price">{item.price}</span>
-                    <Link href="/contact" className="quick-inquire-link">
-                      Inquire <span>→</span>
-                    </Link>
-                  </div>
-                </div>
+          {/* PRODUCT GRID */}
+          <div className="luxury-product-grid-v2">
+            {isLoading ? (
+              <ProductGridSkeleton count={8} />
+            ) : filteredEyewear.length === 0 ? (
+              <div
+                style={{
+                  padding: "5rem 2rem",
+                  textAlign: "center",
+                  width: "100%",
+                  gridColumn: "1 / -1",
+                  background: "rgba(255, 255, 255, 0.02)",
+                  borderRadius: "1.5rem",
+                  border: "1px dashed rgba(255, 255, 255, 0.1)",
+                }}
+              >
+                <h3 style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", marginBottom: "0.5rem", color: "#ffffff" }}>
+                  No Eyewear Matches Your Filter
+                </h3>
+                <p style={{ color: "rgba(255, 255, 255, 0.6)", marginBottom: "1.5rem" }}>
+                  Try relaxing your search terms or resetting filters.
+                </p>
+                <button
+                  onClick={clearAllFilters}
+                  style={{
+                    background: "var(--color-gold)",
+                    color: "#000000",
+                    border: "none",
+                    padding: "0.6rem 1.4rem",
+                    borderRadius: "999px",
+                    fontWeight: 700,
+                    cursor: "pointer",
+                    fontFamily: "var(--font-heading)",
+                    fontSize: "0.75rem",
+                    letterSpacing: "0.1em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Clear All Filters
+                </button>
               </div>
-            ))}
+            ) : (
+              filteredEyewear.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))
+            )}
           </div>
 
+          {/* Prescription Fitting Banner */}
           <div className="subpage-ateliers-banner">
             <div className="ateliers-content">
-              <span className="accent-label">Prescription & Custom Tinting</span>
-              <h2>Custom Lens Engineering</h2>
+              <span className="accent-label">Prescription Lens Customization</span>
+              <h2>Bespoke Optical Glazing</h2>
               <p>
-                Every RAKVIH eyewear frame can be fitted with custom transition, prescription, or gradient tints by our certified optical partners in Geneva.
+                Our master opticians craft custom Zeiss and Essilor prescription lenses mounted directly into your luxury frames.
               </p>
               <Link href="/contact" className="hero-cta-pill">
-                Request Custom Lens Consultation
+                Consult With An Optician
               </Link>
             </div>
           </div>

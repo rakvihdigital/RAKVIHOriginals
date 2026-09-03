@@ -1,12 +1,26 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { initScrollSequence } from '@/hooks/useScrollSequence';
+import { fetchHomepage4CategoriesLatest, Homepage4Categories } from '@/lib/fetchProducts';
+import { ProductCard } from '@/components/ProductCard';
+import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 
 export default function Home() {
+    const [categoriesData, setCategoriesData] = useState<Homepage4Categories | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
         initScrollSequence();
+
+        async function loadData() {
+            setIsLoading(true);
+            const data = await fetchHomepage4CategoriesLatest(6);
+            setCategoriesData(data);
+            setIsLoading(false);
+        }
+        loadData();
     }, []);
 
     return (
@@ -133,107 +147,46 @@ export default function Home() {
             </section>
 
             {/*  ============================================================  */}
-            {/*  2. SHOP BY CATEGORY — with Landing Product Card               */}
+            {/*  1. HAUTE HANDBAGS — LATEST ARRIVALS UNDER HERO 1               */}
             {/*  ============================================================  */}
-            <section id="collections" className="section section-categories">
+            <section id="handbags-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
                 <div className="container">
-
-
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Explore Collections</span>
-                        <h2 className="section-title-xl">Shop By Category</h2>
-                        <p className="section-subtitle">Discover curated luxury selections crafted for every lifestyle.</p>
+                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
+                        <div className="spotlight-header-left">
+                            <div className="accent-line-row">
+                                <div className="accent-bar"></div>
+                                <span className="accent-label">Maison Maroquinerie</span>
+                            </div>
+                            <h2 className="spotlight-title">
+                                <span className="spotlight-title-main">Latest</span>
+                                <span className="spotlight-title-italic">Handbags.</span>
+                            </h2>
+                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                Discover curated women&apos;s luxury leather handbags crafted for timeless elegance.
+                            </p>
+                        </div>
+                        <Link href="/handbags" className="shop-drop-link" id="handbags-explore-btn">
+                            <span>Explore All Handbags</span>
+                            <div className="shop-drop-arrow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </Link>
                     </div>
 
-                    {/*  Category Filter Buttons  */}
-                    <div className="category-filters reveal-element">
-                        <button className="cat-filter-btn active" data-category="all">All</button>
-                        <button className="cat-filter-btn" data-category="totes">Totes</button>
-                        <button className="cat-filter-btn" data-category="shoulder">Shoulder Bags</button>
-                        <button className="cat-filter-btn" data-category="clutch">Clutches</button>
-                        <button className="cat-filter-btn" data-category="crossbody">Crossbody</button>
-                    </div>
-
-                    {/*  Category Grid  */}
-                    <div className="category-grid" id="category-grid">
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" data-cat="totes"
-                            id="cat-card-1">
-                            <div className="category-card-image">
-                                <img src="handbag.webp" alt="D!OR White Lace" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>D!OR White Lace</h3>
-                                    <p>Explore Collection</p>
-                                </div>
+                    <div className="luxury-product-grid-v2">
+                        {isLoading ? (
+                            <ProductGridSkeleton count={6} />
+                        ) : categoriesData?.handbags && categoriesData.handbags.length > 0 ? (
+                            categoriesData.handbags.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        ) : (
+                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
+                                Loading latest handbags...
                             </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-2" data-cat="shoulder"
-                            id="cat-card-2">
-                            <div className="category-card-image">
-                                <img src="handbag 2.webp" alt="Ch@nel Boy Bag" loading="lazy"
-                                    className="floating-img float-diag delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Ch@nel Boy Bag</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-3" data-cat="clutch"
-                            id="cat-card-3">
-                            <div className="category-card-image">
-                                <img src="handbag 3.webp" alt="L.V Empreinte Tote" loading="lazy"
-                                    className="floating-img float-breathe delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Empreinte Tote</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" data-cat="totes"
-                            id="cat-card-4">
-                            <div className="category-card-image">
-                                <img src="handbag 4.webp" alt="B@rberry Check Trim" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>B@rberry Classic</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-2" data-cat="crossbody"
-                            id="cat-card-5">
-                            <div className="category-card-image">
-                                <img src="handbag 5.webp" alt="L.V Pastel Monogram" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Pastel Flap</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-3" data-cat="shoulder"
-                            id="cat-card-6">
-                            <div className="category-card-image">
-                                <img src="handbag 6.webp" alt="L.V Cherry Blossom" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Cherry Blossom</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
+                        )}
                     </div>
                 </div>
             </section>
@@ -285,46 +238,47 @@ export default function Home() {
                         <div className="hero-text-overlay pos-bottom-left" id="hero2-text-3" data-start="0.30" data-end="0.45">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Detail</span>
+                                <span className="accent-label">Materials</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                MONOGRAM <span className="hero-title-stroke">EMBOSSED</span>
+                                GRAINED <span className="hero-title-stroke">LEATHER</span>
                             </h2>
-                            <p className="hero-desc">Signature L.V monogram debossed into premium leather. Every stitch is a
-                                statement.</p>
+                            <p className="hero-desc">Supple calf leather embossed with the classic monogram pattern. Built for all-day
+                                comfort.</p>
                         </div>
 
                         <div className="hero-text-overlay pos-top-right" id="hero2-text-4" data-start="0.47" data-end="0.58">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Engineering</span>
+                                <span className="accent-label">Sole</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                CUSHIONED <span className="hero-title-stroke">COMFORT</span>
+                                GEL-CUSHION <span className="hero-title-stroke">OUTSOLE</span>
                             </h2>
-                            <p className="hero-desc">Dual-density foam midsole with arch support — luxury without compromise.</p>
+                            <p className="hero-desc">Technical rubber sole with monogram flowers insert. Unrivalled grip and impact
+                                absorption.</p>
                         </div>
 
                         <div className="hero-text-overlay pos-bottom-left" id="hero2-text-5" data-start="0.60" data-end="0.72">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Silhouette</span>
+                                <span className="accent-label">Identity</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                THE COMPLETE <span className="hero-title-stroke">PROFILE</span>
+                                VINTAGE <span className="hero-title-stroke">BASKETBALL</span>
                             </h2>
-                            <p className="hero-desc">A chunky silhouette that commands attention — from runway to sidewalk.</p>
+                            <p className="hero-desc">Inspired by vintage basketball sneakers. 7 hours of stitching per pair.</p>
                         </div>
 
                         <div className="hero-text-overlay text-last" id="hero2-text-6">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Shop Now</span>
+                                <span className="accent-label">The Edit</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                OWN THE <span className="hero-title-stroke">SNEAKER</span>
+                                STEP INTO <span className="hero-title-stroke">LUXURY</span>
                             </h2>
-                            <p className="hero-desc">Limited edition. Once they're gone, they're gone.</p>
+                            <p className="hero-desc">The sneaker of the season. Available in limited quantities.</p>
                             <Link href="/footwear" className="hero-cta-pill">Explore Footwear</Link>
                         </div>
 
@@ -338,274 +292,47 @@ export default function Home() {
                 </div>
             </section>
 
-            {/*  SNEAKER CATEGORY SECTION  */}
-            <section id="sneakers" className="section section-categories">
+            {/*  ============================================================  */}
+            {/*  2. LUXURY FOOTWEAR — LATEST ARRIVALS UNDER HERO 2             */}
+            {/*  ============================================================  */}
+            <section id="footwear-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
                 <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Footwear Collection</span>
-                        <h2 className="section-title-xl">Shop By Style</h2>
-                        <p className="section-subtitle">Step into luxury — curated sneakers and shoes for every occasion.</p>
-                    </div>
-                    <div className="category-grid">
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-1" id="shoe-cat-1">
-                            <div className="category-card-image">
-                                <img src="shoe.webp" alt="Trainers" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Luxury Trainers</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-2" id="shoe-cat-2">
-                            <div className="category-card-image">
-                                <img src="shoe 2.webp" alt="High Tops" loading="lazy"
-                                    className="floating-img float-diag delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Boss Sneakers</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-3" id="shoe-cat-3">
-                            <div className="category-card-image">
-                                <img src="shoe 3.webp" alt="Low Cuts" loading="lazy"
-                                    className="floating-img float-breathe delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>B@LMAIN Monogram</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-1" id="shoe-cat-4">
-                            <div className="category-card-image">
-                                <img src="shoe 4.webp" alt="Limited Editions" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>B@LMAIN Graffiti</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-2" id="shoe-cat-5">
-                            <div className="category-card-image">
-                                <img src="shoe 5.webp" alt="Runway Exclusives" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Herme$ Slides</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-3" id="shoe-cat-6">
-                            <div className="category-card-image">
-                                <img src="shoe 6.webp" alt="Collaboration Series" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>FERR@GAMO Loafers</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/*  ============================================================  */}
-            {/*  HERO 4 — DESIGNER HANDBAG COLLECTION SCROLL ANIMATION         */}
-            {/*  ============================================================  */}
-            <section id="hero4" className="hero-section" style={{ display: 'none' }}>
-                <div className="pt-6 pb-6 z-10 relative flex flex-col items-center text-center">
-                    <div className="hero-accent-line reveal-element justify-center mb-4">
-                        <span className="accent-label">Explore Category</span>
-                    </div>
-                    <h2 className="hero-title-bold reveal-element delay-1" style={{ textAlign: 'center' }}>
-                        KEYCHAIN<br />
-                        <span className="relative inline-block pb-1 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[2px] after:bg-gradient-to-r after:from-transparent after:via-[var(--color-gold)] after:to-transparent after:opacity-80" style={{ color: 'var(--color-gold)' }}>COLLECTION</span>
-                    </h2>
-                    <p className="reveal-element delay-2" style={{ maxWidth: '600px', margin: '0.5rem auto 1.5rem auto', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontStyle: 'italic', letterSpacing: '0.03em', color: 'var(--color-gold)', lineHeight: '1.7', fontWeight: 300 }}>
-                        The art of the miniature. Discover polished hardware and unmistakable signature detailing.
-                    </p>
-                </div>
-                <div className="hero-scroll-container">
-                    <div className="hero-sticky">
-                        <canvas id="hero-canvas-4" className="hero-canvas"></canvas>
-                        <div className="hero-gradient-overlay"></div>
-
-                        <div className="hero-text-overlay text-first" id="hero4-text-1">
-                            <div className="hero-accent-line">
+                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
+                        <div className="spotlight-header-left">
+                            <div className="accent-line-row">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">L.V Accessories</span>
+                                <span className="accent-label">Maison Cobblery</span>
                             </div>
-                            <h2 className="hero-title-bold">
-                                THE LUXURY <span className="hero-title-stroke">KEYCHAIN</span>
+                            <h2 className="spotlight-title">
+                                <span className="spotlight-title-main">Luxury</span>
+                                <span className="spotlight-title-italic">Footwear.</span>
                             </h2>
-                            <p className="hero-desc">Small details, grand statements. The signature L.V keychain
-                                collection.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero4-text-2" data-start="0.15" data-end="0.28">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Hardware</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                POLISHED <span className="hero-title-stroke">METAL</span>
-                            </h2>
-                            <p className="hero-desc">Gleaming hardware crafted with precision, engraved with the iconic L.V initials.
+                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                Hand-assembled sneakers, slides, and runners fusing Italian craftsmanship with streetwear.
                             </p>
                         </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero4-text-3" data-start="0.30" data-end="0.45">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Materials</span>
+                        <Link href="/footwear" className="shop-drop-link" id="footwear-explore-btn">
+                            <span>Explore All Footwear</span>
+                            <div className="shop-drop-arrow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
                             </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                PREMIUM <span className="hero-title-stroke">LEATHER</span>
-                            </h2>
-                            <p className="hero-desc">Accented with signature monogram canvas and supple leather tabs.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero4-text-4" data-start="0.47" data-end="0.58">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Design</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                ICONIC <span className="hero-title-stroke">CHARMS</span>
-                            </h2>
-                            <p className="hero-desc">Multiple charms including the Monogram flower and L.V logo to elevate any
-                                accessory.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero4-text-5" data-start="0.60" data-end="0.72">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Function</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                VERSATILE <span className="hero-title-stroke">STYLE</span>
-                            </h2>
-                            <p className="hero-desc">Attach it to your keys or clip it to your favorite bag for an instant touch of
-                                luxury.</p>
-                        </div>
-
-                        <div className="hero-text-overlay text-last" id="hero4-text-6">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">The Edit</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                YOUR EVERYDAY <span className="hero-title-stroke">ICON</span>
-                            </h2>
-                            <p className="hero-desc">A touch of luxury in the palm of your hand.</p>
-                            <Link href="/handbags" className="hero-cta-pill">Explore Leather Goods</Link>
-                        </div>
-
-                        {/*  SLIDE COUNTER  */}
-                        <div className="hero-counter">
-                            <span className="counter-current">01</span>
-                            <div className="counter-divider"></div>
-                            <span className="counter-total">06</span>
-                        </div>
+                        </Link>
                     </div>
-                </div>
-            </section>
 
-            {/*  KEYCHAIN CATEGORY SECTION  */}
-            <section id="accessories" className="section section-categories" style={{ display: 'none' }}>
-                <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Accessories</span>
-                        <h2 className="section-title-xl">L.V Keychains</h2>
-                        <p className="section-subtitle">Discover the art of detail with signature charms and key holders.</p>
-                    </div>
-                    <div className="category-grid">
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" id="key-cat-1">
-                            <div className="category-card-image">
-                                <img src="keychain.webp" alt="L.V Monogram Flower" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Monogram</h3>
-                                    <p>Explore Collection</p>
-                                </div>
+                    <div className="luxury-product-grid-v2">
+                        {isLoading ? (
+                            <ProductGridSkeleton count={6} />
+                        ) : categoriesData?.footwear && categoriesData.footwear.length > 0 ? (
+                            categoriesData.footwear.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        ) : (
+                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
+                                Loading latest footwear...
                             </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-2" id="key-cat-2">
-                            <div className="category-card-image">
-                                <img src="keychain 2.webp" alt="L.V Charm Bracelet" loading="lazy"
-                                    className="floating-img float-diag delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Charms</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-3" id="key-cat-3">
-                            <div className="category-card-image">
-                                <img src="keychain 3.webp" alt="L.V Snow Globe" loading="lazy"
-                                    className="floating-img float-breathe delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Snow Globe</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" id="key-cat-4">
-                            <div className="category-card-image">
-                                <img src="keychain 4.webp" alt="L.V Rose Gold Flower" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Rose Gold</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-2" id="key-cat-5">
-                            <div className="category-card-image">
-                                <img src="keychain 5.webp" alt="L.V Blue Flower" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Blue Flower</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-3" id="key-cat-6">
-                            <div className="category-card-image">
-                                <img src="keychain 6.webp" alt="L.V Leather Strap" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Leather Strap</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
+                        )}
                     </div>
                 </div>
             </section>
@@ -659,31 +386,33 @@ export default function Home() {
                                 <span className="accent-label">Materials</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                PREMIUM <span className="hero-title-stroke">LEATHER</span>
+                                TAURILLON <span className="hero-title-stroke">LEATHER</span>
                             </h2>
-                            <p className="hero-desc">Crafted from the finest calf leather and our signature monogram canvas.</p>
+                            <p className="hero-desc">Sumptuous full-grain leather with a distinctive natural grain texture.</p>
                         </div>
 
                         <div className="hero-text-overlay pos-top-right" id="hero6-text-4" data-start="0.47" data-end="0.58">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Design</span>
+                                <span className="accent-label">Versatility</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                REVERSIBLE <span className="hero-title-stroke">STYLE</span>
+                                REVERSIBLE <span className="hero-title-stroke">DESIGN</span>
                             </h2>
-                            <p className="hero-desc">Versatile designs that offer two distinct looks in one elegant accessory.</p>
+                            <p className="hero-desc">Two styles in one. Monogram canvas on one side, smooth calf leather on the other.
+                            </p>
                         </div>
 
                         <div className="hero-text-overlay pos-bottom-left" id="hero6-text-5" data-start="0.60" data-end="0.72">
                             <div className="hero-accent-line">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Function</span>
+                                <span className="accent-label">Width</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                PERFECT <span className="hero-title-stroke">FIT</span>
+                                40MM <span className="hero-title-stroke">PROFILE</span>
                             </h2>
-                            <p className="hero-desc">Designed to define the waist or sit perfectly on the hips.</p>
+                            <p className="hero-desc">The classic 40mm width — bold enough to make a statement, versatile enough for any
+                                loop.</p>
                         </div>
 
                         <div className="hero-text-overlay text-last" id="hero6-text-6">
@@ -692,9 +421,9 @@ export default function Home() {
                                 <span className="accent-label">The Edit</span>
                             </div>
                             <h2 className="hero-title-bold hero-title-md">
-                                YOUR EVERYDAY <span className="hero-title-stroke">ICON</span>
+                                COMPLETE YOUR <span className="hero-title-stroke">LOOK</span>
                             </h2>
-                            <p className="hero-desc">The ultimate statement accessory.</p>
+                            <p className="hero-desc">The definitive accessory for the modern wardrobe.</p>
                             <Link href="/belts" className="hero-cta-pill">Explore Belts</Link>
                         </div>
 
@@ -708,87 +437,47 @@ export default function Home() {
                 </div>
             </section>
 
-            {/*  BELTS CATEGORY SECTION  */}
-            <section className="section section-categories">
+            {/*  ============================================================  */}
+            {/*  3. SIGNATURE BELTS — LATEST ARRIVALS UNDER HERO 6             */}
+            {/*  ============================================================  */}
+            <section id="belts-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
                 <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Category Focus</span>
-                        <h2 className="section-title-xl">L.V Belts</h2>
-                        <p className="section-subtitle">Discover our curated selection of signature belts.</p>
+                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
+                        <div className="spotlight-header-left">
+                            <div className="accent-line-row">
+                                <div className="accent-bar"></div>
+                                <span className="accent-label">Maison Ceinturerie</span>
+                            </div>
+                            <h2 className="spotlight-title">
+                                <span className="spotlight-title-main">Signature</span>
+                                <span className="spotlight-title-italic">Belts.</span>
+                            </h2>
+                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                Reversible calfskin leather belts with polished gold and silver tone hardware.
+                            </p>
+                        </div>
+                        <Link href="/belts" className="shop-drop-link" id="belts-explore-btn">
+                            <span>Explore All Belts</span>
+                            <div className="shop-drop-arrow">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7" />
+                                </svg>
+                            </div>
+                        </Link>
                     </div>
-                    <div className="category-grid">
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-1" id="belt-cat-1">
-                            <div className="category-card-image">
-                                <img src="belt 1.jpg" alt="L.V Monogram Belt" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Monogram Belt</h3>
-                                    <p>Explore Collection</p>
-                                </div>
+
+                    <div className="luxury-product-grid-v2">
+                        {isLoading ? (
+                            <ProductGridSkeleton count={6} />
+                        ) : categoriesData?.belts && categoriesData.belts.length > 0 ? (
+                            categoriesData.belts.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        ) : (
+                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
+                                Loading latest belts...
                             </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-2" id="belt-cat-2">
-                            <div className="category-card-image">
-                                <img src="belt 2.jpg" alt="Herme$ H Buckle" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Herme$ H Buckle</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-3" id="belt-cat-3">
-                            <div className="category-card-image">
-                                <img src="belt 3.jpg" alt="Gucc! GG Marmont" loading="lazy"
-                                    className="floating-img float-diag delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Gucc! GG Marmont</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-1" id="belt-cat-4">
-                            <div className="category-card-image">
-                                <img src="belt 4.jpg" alt="FERR@GAMO Gancini" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>FERR@GAMO Gancini</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-2" id="belt-cat-5">
-                            <div className="category-card-image">
-                                <img src="belt 5.jpg" alt="B@LMAIN Signature" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>B@LMAIN Signature</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-3" id="belt-cat-6">
-                            <div className="category-card-image">
-                                <img src="belt 6.jpg" alt="Vers@ce Medusa" loading="lazy"
-                                    className="floating-img float-breathe delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Vers@ce Medusa</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
+                        )}
                     </div>
                 </div>
             </section>
@@ -892,331 +581,48 @@ export default function Home() {
                 </div>
             </section>
 
-            {/*  STOLES CATEGORY SECTION  */}
-            <section id="stoles" className="section section-categories">
-                <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Essentials</span>
-                        <h2 className="section-title-xl">L.V Stoles</h2>
-                        <p className="section-subtitle">A delicate blend of the finest fibers for unparalleled warmth.</p>
-                    </div>
-                    <div className="category-grid">
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-1" id="stole-cat-1">
-                            <div className="category-card-image">
-                                <img src="stoles.webp" alt="Cel!ne Monogram" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Cel!ne Monogram</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-2" id="stole-cat-2">
-                            <div className="category-card-image">
-                                <img src="stoles 2.webp" alt="B@rberry Equestrian" loading="lazy"
-                                    className="floating-img float-diag delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>B@rberry Equestrian</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-3" id="stole-cat-3">
-                            <div className="category-card-image">
-                                <img src="stoles 3.webp" alt="Gucc! Flora Print" loading="lazy"
-                                    className="floating-img float-breathe delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Gucc! Flora Print</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-1" id="stole-cat-4">
-                            <div className="category-card-image">
-                                <img src="stoles 4.webp" alt="D!OR Oblique Jacquard" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>D!OR Oblique Jacquard</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-2" id="stole-cat-5">
-                            <div className="category-card-image">
-                                <img src="stoles 5.webp" alt="L.V Gradient Cashmere" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>L.V Gradient Cashmere</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-3" id="stole-cat-6">
-                            <div className="category-card-image">
-                                <img src="stoles 6.webp" alt="Ch@nel Camellia Stole" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Ch@nel Camellia</h3>
-                                    <p>Explore Collection</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
-            {/*  MIXED COLLECTION CATEGORY SECTION  */}
-            <section className="section section-categories">
-                <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">The Complete Collection</span>
-                        <h2 className="section-title-xl">Explore All Categories</h2>
-                        <p className="section-subtitle">Discover our curated selection of footwear, eyewear, and accessories.</p>
-                    </div>
-                    <div className="category-grid">
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" id="mix-cat-1">
-                            <div className="category-card-image">
-                                <img src="handbag 2.webp" alt="Ch@nel Boy Bag" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Luxury Bags</h3>
-                                    <p>Ch@nel Boy Bag</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/footwear" className="category-card hover-float-parent reveal-element stagger-2" id="mix-cat-2">
-                            <div className="category-card-image">
-                                <img src="shoe 4.webp" alt="B@LMAIN Sneakers" loading="lazy"
-                                    className="floating-img float-diag delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Luxury Footwear</h3>
-                                    <p>B@LMAIN Graffiti</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/belts" className="category-card hover-float-parent reveal-element stagger-3" id="mix-cat-3">
-                            <div className="category-card-image">
-                                <img src="belt 1.jpg" alt="L.V Reversible Belt" loading="lazy"
-                                    className="floating-img float-breathe delay-3" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Signature Belts</h3>
-                                    <p>L.V Reversible</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-1" id="mix-cat-4">
-                            <div className="category-card-image">
-                                <img src="keychain 3.webp" alt="L.V Snow Globe" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Premium keychain</h3>
-                                    <p>L.V Snow Globe</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/stoles" className="category-card hover-float-parent reveal-element stagger-2" id="mix-cat-5">
-                            <div className="category-card-image">
-                                <img src="stoles 2.webp" alt="B@rberry Equestrian" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Luxuary Stoles</h3>
-                                    <p>B@rberry Equestrian</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                        <Link href="/handbags" className="category-card hover-float-parent reveal-element stagger-3" id="mix-cat-6">
-                            <div className="category-card-image">
-                                <img src="handbag 5.webp" alt="L.V Pastel Flap" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="category-card-gradient"></div>
-                                <div className="category-card-label">
-                                    <h3>Handbags</h3>
-                                    <p>L.V Pastel Flap</p>
-                                </div>
-                            </div>
-                            <div className="category-card-bar"></div>
-                        </Link>
-                    </div>
-                </div>
-            </section>
-
             {/*  ============================================================  */}
-            {/*  3. SPOTLIGHT EDIT — Horizontal Product Marquee                */}
+            {/*  4. HAUTE STOLES — LATEST ARRIVALS UNDER HERO 5                */}
             {/*  ============================================================  */}
-            <section className="section section-spotlight">
+            <section id="stoles-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
                 <div className="container">
-                    <div className="spotlight-header reveal-element">
+                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
                         <div className="spotlight-header-left">
                             <div className="accent-line-row">
                                 <div className="accent-bar"></div>
-                                <span className="accent-label">Curated For You</span>
+                                <span className="accent-label">Maison Étole</span>
                             </div>
                             <h2 className="spotlight-title">
-                                <span className="spotlight-title-main">Spotlight</span>
-                                <span className="spotlight-title-italic">Edit.</span>
+                                <span className="spotlight-title-main">Haute</span>
+                                <span className="spotlight-title-italic">Stoles.</span>
                             </h2>
+                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
+                                A delicate blend of pure cashmere and fine silk jacquards woven on artisanal looms.
+                            </p>
                         </div>
-                        <Link href="/handbags" className="shop-drop-link" id="shop-drop-link">
-                            <span>Shop The Drop</span>
+                        <Link href="/stoles" className="shop-drop-link" id="stoles-explore-btn">
+                            <span>Explore All Stoles</span>
                             <div className="shop-drop-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    strokeWidth="2">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                     <path d="M5 12h14M12 5l7 7-7 7" />
                                 </svg>
                             </div>
                         </Link>
                     </div>
-                </div>
 
-                {/*  Marquee Track  */}
-                <div className="marquee-wrapper">
-                    <div className="marquee-track" id="marquee-track">
-                        {/*  Card 1  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">01</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">New</span>
+                    <div className="luxury-product-grid-v2">
+                        {isLoading ? (
+                            <ProductGridSkeleton count={6} />
+                        ) : categoriesData?.stoles && categoriesData.stoles.length > 0 ? (
+                            categoriesData.stoles.map((product) => (
+                                <ProductCard key={product.id} product={product} />
+                            ))
+                        ) : (
+                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
+                                Loading latest stoles...
                             </div>
-                            <div className="marquee-card-image">
-                                <img src="handbag 4.webp" alt="B@rberry Classic Bag" loading="lazy"
-                                    className="floating-img float-v1 delay-1" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>B@rberry Classic Bag</h3>
-                                <p className="marquee-card-price">$4,900</p>
-                            </div>
-                        </div>
-                        {/*  Card 2  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">02</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">Limited</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="shoe.webp" alt="L.V Trainers" loading="lazy"
-                                    className="floating-img float-breathe delay-2" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>L.V Trainers</h3>
-                                <p className="marquee-card-price">$3,400</p>
-                            </div>
-                        </div>
-                        {/*  Card 3  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">03</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">Exclusive</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="belt 2.jpg" alt="Herme$ Constance Belt" loading="lazy"
-                                    className="floating-img float-diag delay-3" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>Herme$ Constance Belt</h3>
-                                <p className="marquee-card-price">$3,800</p>
-                            </div>
-                        </div>
-                        {/*  Card 4  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">04</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">New</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="keychain.webp" alt="L.V Monogram Keychain" loading="lazy"
-                                    className="floating-img float-v2 delay-1" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>L.V Monogram Keychain</h3>
-                                <p className="marquee-card-price">$2,800</p>
-                            </div>
-                        </div>
-                        {/*  Card 5  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">05</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">Bestseller</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="stoles.webp" alt="Cel!ne Monogram Stole" loading="lazy"
-                                    className="floating-img float-drift delay-4" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>Cel!ne Monogram Stole</h3>
-                                <p className="marquee-card-price">$4,200</p>
-                            </div>
-                        </div>
-                        {/*  Card 6  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">06</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">Limited</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="handbag 6.webp" alt="L.V Cherry Blossom Tote" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>L.V Cherry Blossom Tote</h3>
-                                <p className="marquee-card-price">$4,100</p>
-                            </div>
-                        </div>
-                        {/*  Card 7  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">07</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">New</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="shoe 3.webp" alt="B@LMAIN Monogram Sneakers" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>B@LMAIN Monogram Sneakers</h3>
-                                <p className="marquee-card-price">$1,900</p>
-                            </div>
-                        </div>
-                        {/*  Card 8  */}
-                        <div className="marquee-card hover-float-parent">
-                            <span className="marquee-card-number">08</span>
-                            <div className="marquee-card-badges">
-                                <span className="marquee-badge">Exclusive</span>
-                            </div>
-                            <div className="marquee-card-image">
-                                <img src="stoles 3.webp" alt="Gucc! Flora Silk Stole" loading="lazy"
-                                    className="floating-img float-diag delay-3" />
-                            </div>
-                            <div className="marquee-card-info">
-                                <h3>Gucc! Flora Silk Stole</h3>
-                                <p className="marquee-card-price">$2,400</p>
-                            </div>
-                        </div>
+                        )}
                     </div>
-                    {/*  Marquee fade edges  */}
-                    <div className="marquee-fade-left"></div>
-                    <div className="marquee-fade-right"></div>
                 </div>
             </section>
 

@@ -3,6 +3,12 @@
 import React, { useState } from "react";
 import Link from "next/link";
 
+const SOCIAL_LINKS = {
+  instagram: "https://www.instagram.com/rakvih_solutions_pvt_ltd?igsh=N2xybTAzYW10bHRm",
+  facebook: "https://www.facebook.com/share/15UG4Sd23e/",
+  google: "https://www.google.com/search?gs_ssp=eJzj4tVP1zc0LC5MSbLINY83YLRSNagwTkpMNbQ0TDQ1TbE0NEwytTKoMDU0ME5LMTVPsTQytUhMMfNiK0rMLsvMAAAgchGg&q=rakvih&oq=rakvih&gs_lcrp=EgZjaHJvbWUqEggBEC4YJxivARjHARiABBiKBTIGCAAQRRg8MhIIARAuGCcYrwEYxwEYgAQYigUyDAgCECMYJxjwBRieBjIRCAMQABgKGAsYgwEYsQMYgAQyDggEEC4YChgLGLEDGIAEMgYIBRBFGDwyBggGEEUYPDIGCAcQRRg80gEIMzY5OWowajeoAgCwAgA&sourceid=chrome&ie=UTF-8",
+};
+
 export default function ContactPage() {
   const [submitted, setSubmitted] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,49 +27,43 @@ export default function ContactPage() {
 
   const contactChannels = [
     {
-      title: "Direct Client Inquiries",
-      detail: "contact@rakvihoriginals.com",
-      link: "mailto:contact@rakvihoriginals.com",
-      desc: "For general inquiries, orders, and sizing assistance.",
+      title: "Corporate Headquarters",
+      detail: "office@rakvih.in",
+      link: "https://rakvih.in/contact.html#",
+      desc: "Official inquiries, atelier visits & appointments.",
     },
     {
-      title: "Private Salon Appointments",
-      detail: "+1 (212) 888-0018",
-      link: "tel:+12128880018",
-      desc: "Champagne styling sessions & bespoke atelier commissions.",
+      title: "Direct Client Helpline",
+      detail: "+91 82963 92047",
+      link: "tel:+918296392047",
+      desc: "Dedicated personal styling & assistance line.",
     },
     {
       title: "VIP WhatsApp Concierge",
-      detail: "+33 1 42 68 00 18",
-      link: "https://wa.me/33142680018",
+      detail: "+91 98200 99401",
+      link: "https://wa.me/919820099401",
       desc: "Instant priority messaging for registered collectors.",
     },
   ];
 
   const locations = [
     {
-      city: "PARIS",
+      city: "BENGALURU HEADQUARTERS",
+      address: "238, 2nd Main, 2nd Cross, Attur Layout, Yelahanka, Bengaluru, Karnataka 560064",
+      phone: "+91 82963 92047",
+      hours: "Mon – Sat: 09:30 – 19:00 IST",
+    },
+    {
+      city: "PARIS SHOWROOM",
       address: "18 Place Vendôme, 75001 Paris, France",
       phone: "+33 1 42 68 00 18",
       hours: "Mon – Sat: 10:00 – 19:00 CET",
     },
     {
-      city: "MILAN",
+      city: "MILAN ATELIER",
       address: "Via Montenapoleone 8, 20121 Milano, Italy",
       phone: "+39 02 7600 1818",
       hours: "Mon – Sat: 10:30 – 19:30 CET",
-    },
-    {
-      city: "NEW YORK",
-      address: "650 Madison Avenue, New York, NY 10022",
-      phone: "+1 (212) 888-0018",
-      hours: "Mon – Sat: 10:00 – 18:00 EST",
-    },
-    {
-      city: "DUBAI",
-      address: "Fashion Avenue, The Dubai Mall, Downtown Dubai",
-      phone: "+971 4 362 7500",
-      hours: "Sun – Thu: 10:00 – 22:00 GST",
     },
   ];
 
@@ -92,13 +92,13 @@ export default function ContactPage() {
           </div>
           <div className="hero-accent-line">
             <div className="accent-bar"></div>
-            <span className="accent-label">Client Services</span>
+            <span className="accent-label">Client Services & Salons</span>
           </div>
           <h1 className="subpage-title">
             CONTACT <span className="hero-title-stroke">US</span>
           </h1>
           <p className="subpage-subtitle">
-            Our dedicated client advisors are at your service for private showroom appointments, bespoke commissions, and worldwide assistance.
+            Our dedicated client advisors are at your service for private showroom appointments, bespoke commissions, and order assistance.
           </p>
         </div>
       </section>
@@ -109,7 +109,7 @@ export default function ContactPage() {
           {/* Quick Channels Cards */}
           <div className="contact-channels-grid">
             {contactChannels.map((ch, idx) => (
-              <a key={idx} href={ch.link} className="contact-channel-card">
+              <a key={idx} href={ch.link} target={ch.link.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="contact-channel-card">
                 <span className="accent-label">Direct Channel</span>
                 <h3>{ch.title}</h3>
                 <p className="channel-detail">{ch.detail}</p>
@@ -183,7 +183,7 @@ export default function ContactPage() {
                       <label>Phone / WhatsApp</label>
                       <input
                         type="tel"
-                        placeholder="+1 (555) 000-0000"
+                        placeholder="+91 98200 00000"
                         value={formData.phone}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
@@ -196,10 +196,10 @@ export default function ContactPage() {
                       value={formData.subject}
                       onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                     >
-                      <option value="Private Salon Appointment">Private Salon Appointment (Paris / Milan / NY / Dubai)</option>
+                      <option value="Private Salon Appointment">Private Salon Appointment</option>
                       <option value="Bespoke Atelier Commission">Bespoke Monogramming / Atelier Commission</option>
                       <option value="Product Availability & Sizing">Product Availability & Sizing Consultation</option>
-                      <option value="Customer Care & Delivery">Customer Care & Worldwide White-Glove Delivery</option>
+                      <option value="Customer Care & Delivery">Customer Care & Worldwide Insured Delivery</option>
                     </select>
                   </div>
 
@@ -221,10 +221,10 @@ export default function ContactPage() {
               )}
             </div>
 
-            {/* Global Salons Directory */}
+            {/* Global Salons Directory & Social Links */}
             <div className="contact-info-card">
-              <span className="accent-label">Global Showrooms</span>
-              <h2>Our Private Salons</h2>
+              <span className="accent-label">Official Atelier & Salons</span>
+              <h2>Locations & Hours</h2>
 
               <div className="salon-locations-list">
                 {locations.map((loc) => (
@@ -237,9 +237,58 @@ export default function ContactPage() {
                 ))}
               </div>
 
-              <div className="direct-concierge-pill" style={{ marginTop: "2rem" }}>
+              {/* Social Channels in Contact */}
+              <div style={{ marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+                <span style={{ fontSize: "0.7rem", fontFamily: "var(--font-heading)", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", fontWeight: 700, display: "block", marginBottom: "0.75rem" }}>
+                  Connect on Official Channels
+                </span>
+                <div className="footer-social-row" style={{ marginTop: 0 }}>
+                  <a
+                    href={SOCIAL_LINKS.instagram}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-social-btn"
+                    title="Instagram @rakvih_solutions_pvt_ltd"
+                    aria-label="Instagram"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+                    </svg>
+                  </a>
+
+                  <a
+                    href={SOCIAL_LINKS.facebook}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-social-btn"
+                    title="Facebook"
+                    aria-label="Facebook"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                    </svg>
+                  </a>
+
+                  <a
+                    href={SOCIAL_LINKS.google}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="footer-social-btn"
+                    title="Google Business Listing"
+                    aria-label="Google"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2a9.96 9.96 0 0 0-7.07 2.93A10 10 0 0 0 2 12c0 5.52 4.48 10 10 10 4.97 0 9.17-3.64 9.88-8.4H12v-3.6h11.8c.13.63.2 1.29.2 2 0 6.63-5.37 12-12 12C5.37 24 0 18.63 0 12S5.37 0 12 0c3.27 0 6.27 1.25 8.54 3.32l-2.7 2.7C16.42 4.6 14.33 3.8 12 3.8z" />
+                    </svg>
+                  </a>
+                </div>
+              </div>
+
+              <div className="direct-concierge-pill" style={{ marginTop: "1.5rem" }}>
                 <p>Direct Advisory Desk</p>
-                <a href="mailto:contact@rakvihoriginals.com">contact@rakvihoriginals.com</a>
+                <a href="mailto:office@rakvih.in">office@rakvih.in</a>
               </div>
             </div>
           </div>
