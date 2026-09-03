@@ -47,20 +47,20 @@ export default function Footer() {
   const quickLinks = [
     { name: "Home", href: "/" },
     { name: "Collection Hub", href: "/collection-hub" },
+    { name: "About Us", href: "/about" },
+    { name: "Contact Us", href: "/contact" },
+    { name: "Privacy Policy", href: "/privacy-policy" },
+    { name: "Terms & Conditions", href: "/terms" },
+  ];
+
+  const categoryLinks = [
+    { name: "Men", href: "/collection-hub?gender=Men" },
+    { name: "Women", href: "/collection-hub?gender=Women" },
+    { name: "Unisex", href: "/collection-hub?gender=Unisex" },
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
     { name: "Stoles", href: "/stoles" },
-    { name: "About Us", href: "/about" },
-    { name: "Contact Us", href: "/contact" },
-  ];
-
-  const clientCareLinks = [
-    { name: "Private Showroom Appointments", href: "/contact" },
-    { name: "Bespoke Monogramming Service", href: "/contact" },
-    { name: "Sizing & Fitting Assistance", href: "/contact" },
-    { name: "Worldwide Insured Delivery", href: "/contact" },
-    { name: "Authenticity & Heritage", href: "/about" },
   ];
 
   return (
@@ -149,11 +149,11 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Client Care */}
+          {/* Column 3: Categories */}
           <div className="footer-col">
-            <h4 className="footer-col-title">CLIENT CARE</h4>
+            <h4 className="footer-col-title">CATEGORIES</h4>
             <ul className="footer-links-list">
-              {clientCareLinks.map((item, idx) => (
+              {categoryLinks.map((item, idx) => (
                 <li key={idx}>
                   <Link href={item.href}>{item.name}</Link>
                 </li>

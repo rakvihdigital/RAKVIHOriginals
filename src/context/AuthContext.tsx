@@ -5,8 +5,9 @@ import React, {
   useContext,
   useState,
   useEffect,
-  useCallback,
 } from "react";
+
+import bcrypt from "bcryptjs";
 
 import { supabase } from "@/lib/supabase";
 
@@ -26,14 +27,15 @@ export interface CartItem {
 }
 
 export interface CustomerProfile {
-  id?: number | string;
-  auth_user_id?: string;
+  id: string;
   name: string;
   email: string;
   phone?: string | null;
   is_blocked?: boolean;
   created_at?: string;
   last_sign_in_at?: string | null;
+  // `password` (hashed) lives on this row in the DB but is intentionally
+  // stripped out before it ever touches React state — see `stripPassword`.
 }
 
 interface AuthResult {
@@ -42,7 +44,7 @@ interface AuthResult {
 }
 
 interface AuthContextType {
-  user: any | null;
+  user: { id: string; email: string } | null;
   customer: CustomerProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -65,6 +67,20 @@ interface AuthContextType {
     password: string,
     phone?: string
   ) => Promise<AuthResult>;
+
+  /**
+   * Lightweight session sync for auth flows that live OUTSIDE this
+   * context (e.g. a self-contained modal querying its own `users`
+   * table). It does NOT hash/verify anything or touch Supabase — it
+   * just takes a row you've already authenticated elsewhere and
+   * mirrors it into shared state (user/customer + localStorage
+   * session pointer), which is what drives the header, cart and
+   * wishlist. Pass whatever row you fetched; `password` (if present)
+   * is stripped automatically.
+   */
+  setSessionUser: (
+    profile: { id: string; email: string; [key: string]: any }
+  ) => void;
 
   logout: () => Promise<void>;
 
@@ -106,10 +122,33 @@ const AuthContext = createContext<AuthContextType | undefined>(
 
 /* =====================================================
    STORAGE KEYS
+   Cart & wishlist are scoped PER USER via their id, regardless of
+   which table (`customers` or `users`) that id came from.
 ===================================================== */
 
 const CART_STORAGE_KEY = "rakvih_user_cart_v1";
 const WISHLIST_STORAGE_KEY = "rakvih_user_wishlist_v1";
+const SESSION_STORAGE_KEY = "rakvih_customer_session_v1";
+
+function cartKey(userId: string) {
+  return `${CART_STORAGE_KEY}:${userId}`;
+}
+
+function wishlistKey(userId: string) {
+  return `${WISHLIST_STORAGE_KEY}:${userId}`;
+}
+
+/* =====================================================
+   HELPERS
+===================================================== */
+
+/** Never let a password hash sit in React state longer than it has to. */
+function stripPassword<T extends { password?: unknown }>(
+  row: T
+): Omit<T, "password"> {
+  const { password, ...rest } = row;
+  return rest;
+}
 
 /* =====================================================
    PROVIDER
@@ -120,7 +159,9 @@ export function AuthProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [user, setUser] = useState<any | null>(null);
+  const [user, setUser] = useState<{ id: string; email: string } | null>(
+    null
+  );
 
   const [customer, setCustomer] =
     useState<CustomerProfile | null>(null);
@@ -133,124 +174,73 @@ export function AuthProvider({
     useState<StoreProduct[]>([]);
 
   /* =====================================================
-     LOAD CUSTOMER PROFILE
-  ===================================================== */
-
-  const loadCustomerProfile = useCallback(
-    async (
-      authUser: any
-    ): Promise<CustomerProfile | null> => {
-      if (!authUser?.id) {
-        return null;
-      }
-
-      try {
-        const { data, error } = await supabase
-          .from("customers")
-          .select("*")
-          .eq("auth_user_id", authUser.id)
-          .maybeSingle();
-
-        if (error) {
-          console.error(
-            "Customer profile load error:",
-            error.message
-          );
-        }
-
-        if (data) {
-          setCustomer(data);
-
-          return data;
-        }
-
-        /*
-          Customer profile doesn't exist.
-
-          Create it automatically.
-        */
-
-        const fallbackCustomer = {
-          auth_user_id: authUser.id,
-
-          name:
-            authUser.user_metadata?.full_name ||
-            authUser.email?.split("@")[0] ||
-            "Customer",
-
-          email: authUser.email || "",
-
-          phone:
-            authUser.user_metadata?.phone ||
-            null,
-
-          is_blocked: false,
-
-          last_sign_in_at:
-            new Date().toISOString(),
-        };
-
-        const {
-          data: createdCustomer,
-          error: createError,
-        } = await supabase
-          .from("customers")
-          .upsert(
-            fallbackCustomer,
-            {
-              onConflict: "auth_user_id",
-            }
-          )
-          .select()
-          .single();
-
-        if (createError) {
-          console.error(
-            "Customer creation error:",
-            createError.message
-          );
-
-          return null;
-        }
-
-        setCustomer(createdCustomer);
-
-        return createdCustomer;
-      } catch (error) {
-        console.error(
-          "Unexpected customer profile error:",
-          error
-        );
-
-        return null;
-      }
-    },
-    []
-  );
-
-  /* =====================================================
-     INITIAL AUTH CHECK
+     RESTORE SESSION FROM LOCALSTORAGE
+     Tries `customers` first (the built-in login/register flow),
+     then falls back to `users` (the standalone AuthModal flow),
+     so whichever table the saved id actually belongs to is found.
   ===================================================== */
 
   useEffect(() => {
     let mounted = true;
 
-    async function initializeAuth() {
+    async function restoreSession() {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const raw = window.localStorage.getItem(
+          SESSION_STORAGE_KEY
+        );
 
-        if (mounted && session?.user) {
-          setUser(session.user);
+        if (!raw) {
+          return;
+        }
 
-          await loadCustomerProfile(
-            session.user
+        const { id } = JSON.parse(raw) as { id: string };
+
+        const { data: customerRow, error: customerError } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (customerError) {
+          console.error(
+            "Session restore error (customers):",
+            customerError.message
           );
+        }
+
+        if (customerRow && !customerRow.is_blocked) {
+          if (mounted) {
+            setUser({ id: customerRow.id, email: customerRow.email });
+            setCustomer(stripPassword(customerRow));
+          }
+          return;
+        }
+
+        const { data: userRow, error: userError } = await supabase
+          .from("users")
+          .select("*")
+          .eq("id", id)
+          .maybeSingle();
+
+        if (userError) {
+          console.error(
+            "Session restore error (users):",
+            userError.message
+          );
+        }
+
+        if (!userRow) {
+          window.localStorage.removeItem(SESSION_STORAGE_KEY);
+          return;
+        }
+
+        if (mounted) {
+          setUser({ id: userRow.id, email: userRow.email });
+          setCustomer(stripPassword(userRow));
         }
       } catch (error) {
         console.error(
-          "Auth initialization error:",
+          "Unexpected session restore error:",
           error
         );
       } finally {
@@ -260,94 +250,71 @@ export function AuthProvider({
       }
     }
 
-    initializeAuth();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-
-          await loadCustomerProfile(
-            session.user
-          );
-        } else {
-          setUser(null);
-          setCustomer(null);
-        }
-      }
-    );
+    restoreSession();
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
-  }, [loadCustomerProfile]);
+  }, []);
 
   /* =====================================================
-     LOAD LOCAL CART + WISHLIST
+     LOAD CART + WISHLIST — keyed to whichever user is
+     currently logged in, from either table.
   ===================================================== */
 
   useEffect(() => {
-    try {
-      const savedCart =
-        localStorage.getItem(CART_STORAGE_KEY);
-
-      if (savedCart) {
-        setCart(JSON.parse(savedCart));
-      }
-
-      const savedWishlist =
-        localStorage.getItem(
-          WISHLIST_STORAGE_KEY
-        );
-
-      if (savedWishlist) {
-        setWishlist(
-          JSON.parse(savedWishlist)
-        );
-      }
-    } catch (error) {
-      console.error(
-        "Storage loading error:",
-        error
-      );
+    if (!user?.id) {
+      setCart([]);
+      setWishlist([]);
+      return;
     }
-  }, []);
+
+    try {
+      const savedCart = localStorage.getItem(cartKey(user.id));
+      setCart(savedCart ? JSON.parse(savedCart) : []);
+
+      const savedWishlist = localStorage.getItem(
+        wishlistKey(user.id)
+      );
+      setWishlist(savedWishlist ? JSON.parse(savedWishlist) : []);
+    } catch (error) {
+      console.error("Storage loading error:", error);
+      setCart([]);
+      setWishlist([]);
+    }
+  }, [user?.id]);
 
   /* =====================================================
      SAVE CART
   ===================================================== */
 
   useEffect(() => {
+    if (!user?.id) return;
     try {
-      localStorage.setItem(
-        CART_STORAGE_KEY,
-        JSON.stringify(cart)
-      );
+      localStorage.setItem(cartKey(user.id), JSON.stringify(cart));
     } catch {
       // Ignore storage errors
     }
-  }, [cart]);
+  }, [cart, user?.id]);
 
   /* =====================================================
      SAVE WISHLIST
   ===================================================== */
 
   useEffect(() => {
+    if (!user?.id) return;
     try {
       localStorage.setItem(
-        WISHLIST_STORAGE_KEY,
+        wishlistKey(user.id),
         JSON.stringify(wishlist)
       );
     } catch {
       // Ignore storage errors
     }
-  }, [wishlist]);
+  }, [wishlist, user?.id]);
 
   /* =====================================================
-     LOGIN
+     LOGIN (customers table — used elsewhere in the app)
   ===================================================== */
 
   async function login(
@@ -355,11 +322,13 @@ export function AuthProvider({
     password: string
   ): Promise<AuthResult> {
     try {
-      const { data, error } =
-        await supabase.auth.signInWithPassword({
-          email: email.trim().toLowerCase(),
-          password,
-        });
+      const normalizedEmail = email.trim().toLowerCase();
+
+      const { data: row, error } = await supabase
+        .from("customers")
+        .select("*")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
 
       if (error) {
         return {
@@ -368,26 +337,14 @@ export function AuthProvider({
         };
       }
 
-      if (!data.user) {
+      if (!row) {
         return {
           success: false,
-          error: "Login failed.",
+          error: "No account found with that email.",
         };
       }
 
-      const customerProfile =
-        await loadCustomerProfile(data.user);
-
-      /*
-        CHECK IF BLOCKED
-      */
-
-      if (customerProfile?.is_blocked) {
-        await supabase.auth.signOut();
-
-        setUser(null);
-        setCustomer(null);
-
+      if (row.is_blocked) {
         return {
           success: false,
           error:
@@ -395,22 +352,36 @@ export function AuthProvider({
         };
       }
 
-      /*
-        UPDATE LAST LOGIN
-      */
+      const passwordMatches = await bcrypt.compare(
+        password,
+        row.password
+      );
 
-      await supabase
+      if (!passwordMatches) {
+        return {
+          success: false,
+          error: "Incorrect password.",
+        };
+      }
+
+      const { data: updated, error: updateError } = await supabase
         .from("customers")
         .update({
-          last_sign_in_at:
-            new Date().toISOString(),
+          last_sign_in_at: new Date().toISOString(),
         })
-        .eq(
-          "auth_user_id",
-          data.user.id
-        );
+        .eq("id", row.id)
+        .select()
+        .single();
 
-      setUser(data.user);
+      const freshRow = updateError ? row : updated;
+
+      setUser({ id: freshRow.id, email: freshRow.email });
+      setCustomer(stripPassword(freshRow));
+
+      window.localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({ id: freshRow.id })
+      );
 
       return {
         success: true,
@@ -426,7 +397,7 @@ export function AuthProvider({
   }
 
   /* =====================================================
-     REGISTER
+     REGISTER (customers table — used elsewhere in the app)
   ===================================================== */
 
   async function register(
@@ -439,59 +410,35 @@ export function AuthProvider({
       const normalizedEmail =
         email.trim().toLowerCase();
 
-      /*
-        CREATE AUTH USER
-      */
+      const { data: existing, error: lookupError } = await supabase
+        .from("customers")
+        .select("id")
+        .eq("email", normalizedEmail)
+        .maybeSingle();
 
-      const {
-        data,
-        error,
-      } = await supabase.auth.signUp({
-        email: normalizedEmail,
-
-        password,
-
-        options: {
-          data: {
-            full_name: name.trim(),
-            phone: phone?.trim() || "",
-          },
-        },
-      });
-
-      if (error) {
+      if (lookupError) {
         return {
           success: false,
-          error: error.message,
+          error: lookupError.message,
         };
       }
 
-      if (!data.user) {
+      if (existing) {
         return {
           success: false,
-          error:
-            "Account creation failed.",
+          error: "An account with this email already exists.",
         };
       }
 
-      /*
-        CREATE CUSTOMER TABLE RECORD
-      */
+      const passwordHash = await bcrypt.hash(password, 10);
 
       const customerData = {
-        auth_user_id: data.user.id,
-
         name: name.trim(),
-
         email: normalizedEmail,
-
-        phone:
-          phone?.trim() || null,
-
+        phone: phone?.trim() || null,
+        password: passwordHash,
         is_blocked: false,
-
-        last_sign_in_at:
-          new Date().toISOString(),
+        last_sign_in_at: new Date().toISOString(),
       };
 
       const {
@@ -499,13 +446,7 @@ export function AuthProvider({
         error: customerError,
       } = await supabase
         .from("customers")
-        .upsert(
-          customerData,
-          {
-            onConflict:
-              "auth_user_id",
-          }
-        )
+        .insert(customerData)
         .select()
         .single();
 
@@ -518,14 +459,20 @@ export function AuthProvider({
         return {
           success: false,
           error:
-            "Account was created, but customer details could not be saved. Please contact support.",
+            "Account could not be created. Please try again.",
         };
       }
 
-      setUser(data.user);
+      setUser({
+        id: insertedCustomer.id,
+        email: insertedCustomer.email,
+      });
 
-      setCustomer(
-        insertedCustomer
+      setCustomer(stripPassword(insertedCustomer));
+
+      window.localStorage.setItem(
+        SESSION_STORAGE_KEY,
+        JSON.stringify({ id: insertedCustomer.id })
       );
 
       return {
@@ -542,21 +489,35 @@ export function AuthProvider({
   }
 
   /* =====================================================
+     SET SESSION USER — for auth flows that manage their own
+     table/queries (e.g. AuthModal's standalone `users` logic)
+     and just need to sync the shared user/customer state,
+     cart, and wishlist after they've already verified the
+     credentials themselves.
+  ===================================================== */
+
+  function setSessionUser(
+    profile: { id: string; email: string; [key: string]: any }
+  ) {
+    setUser({ id: profile.id, email: profile.email });
+    setCustomer(stripPassword(profile) as CustomerProfile);
+
+    window.localStorage.setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify({ id: profile.id })
+    );
+  }
+
+  /* =====================================================
      LOGOUT
   ===================================================== */
 
   async function logout(): Promise<void> {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error(
-        "Logout error:",
-        error
-      );
-    } finally {
-      setUser(null);
-      setCustomer(null);
-    }
+    setUser(null);
+    setCustomer(null);
+    setCart([]);
+    setWishlist([]);
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
   }
 
   /* =====================================================
@@ -811,6 +772,7 @@ export function AuthProvider({
 
         login,
         register,
+        setSessionUser,
         logout,
 
         addToCart,
