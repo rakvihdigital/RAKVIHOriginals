@@ -19,6 +19,7 @@ export default function BeltsPage() {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadBelts() {
@@ -268,11 +269,19 @@ export default function BeltsPage() {
                 </button>
               </div>
             ) : (
-              filteredBelts.map((product) => (
+              filteredBelts.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredBelts.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Bespoke Atelier Banner */}
           <div className="subpage-ateliers-banner">

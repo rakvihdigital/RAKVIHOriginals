@@ -26,6 +26,7 @@ export default function CollectionHubPage() {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadAllProducts() {
@@ -340,11 +341,19 @@ export default function CollectionHubPage() {
                 </button>
               </div>
             ) : (
-              filteredProducts.map((product) => (
+              filteredProducts.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredProducts.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Bottom Salon Banner */}
           <div className="subpage-ateliers-banner" style={{ marginTop: "5rem" }}>

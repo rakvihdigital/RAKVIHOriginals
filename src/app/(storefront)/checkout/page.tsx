@@ -33,13 +33,6 @@ export default function CheckoutPage() {
   // Payment method
   const [paymentMethod, setPaymentMethod] = useState<"UPI" | "Bank Transfer" | "Cash on Delivery" | "Card">("UPI");
 
-  // Coupon state
-  const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; type: string } | null>(null);
-  const [couponError, setCouponError] = useState<string | null>(null);
-  const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
-  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
-
   // Submit state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -103,63 +96,6 @@ export default function CheckoutPage() {
     );
   }
 
-  // Calculate discounts
-  let discountAmount = 0;
-  if (appliedCoupon) {
-    if (appliedCoupon.type === "percentage") {
-      discountAmount = Math.round((cartSubtotal * appliedCoupon.discount) / 100);
-    } else {
-      discountAmount = appliedCoupon.discount;
-    }
-  }
-
-  const finalGrandTotal = Math.max(0, cartSubtotal - discountAmount);
-
-  // Apply Coupon
-  const handleApplyCoupon = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!couponCode.trim()) return;
-
-    setCouponError(null);
-    setCouponSuccess(null);
-    setIsValidatingCoupon(true);
-
-    try {
-      const code = couponCode.trim().toUpperCase();
-      const { data, error } = await supabase
-        .from("coupons")
-        .select("*")
-        .eq("code", code)
-        .eq("active", true)
-        .single();
-
-      if (!error && data) {
-        if (data.min_purchase_amount && cartSubtotal < data.min_purchase_amount) {
-          setCouponError(`Minimum purchase amount of ${formatINR(data.min_purchase_amount)} required for this code.`);
-        } else {
-          setAppliedCoupon({
-            code: data.code,
-            discount: data.discount_value,
-            type: data.discount_type || "percentage",
-          });
-          setCouponSuccess(`Coupon "${data.code}" applied successfully!`);
-        }
-      } else if (code === "VIP10") {
-        setAppliedCoupon({ code: "VIP10", discount: 10, type: "percentage" });
-        setCouponSuccess("VIP Privé 10% discount applied!");
-      } else if (code === "RAKVIH500") {
-        setAppliedCoupon({ code: "RAKVIH500", discount: 500, type: "fixed" });
-        setCouponSuccess("₹500 Atelier Welcome voucher applied!");
-      } else {
-        setCouponError("Invalid or expired coupon code. Please try again.");
-      }
-    } catch {
-      setCouponError("Unable to validate coupon code at this moment.");
-    } finally {
-      setIsValidatingCoupon(false);
-    }
-  };
-
   // Submit Order
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -200,17 +136,15 @@ export default function CheckoutPage() {
         payment_status: paymentMethod === "Cash on Delivery" ? "pending" : "paid",
         total_price: cartSubtotal,
         shipping_cost: 0,
-        grand_total: finalGrandTotal,
+        grand_total: cartSubtotal,
         cart_items: cartItemsPayload,
         status: "confirmed",
         order_date: new Date().toISOString(),
         email: email.trim() || user?.email || "",
-        coupon_code: appliedCoupon ? appliedCoupon.code : null,
-        discount_amount: discountAmount,
       };
 
       const { data: insertedData, error: insertError } = await supabase
-        .from("orders")
+        .from("Rakvih_orders")
         .insert([newOrder])
         .select("id")
         .single();
@@ -561,62 +495,12 @@ export default function CheckoutPage() {
                   })}
                 </div>
 
-                {/* Coupon Code Section */}
-                <div style={{ marginBottom: "1.5rem", paddingTop: "0.75rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <input
-                      type="text"
-                      placeholder="Coupon / VIP Code (e.g. VIP10)"
-                      value={couponCode}
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="filter-input-glass"
-                      style={{ flex: 1, padding: "0.65rem 1rem", borderRadius: "8px", fontSize: "0.75rem" }}
-                    />
-                    <button
-                      type="button"
-                      onClick={handleApplyCoupon}
-                      disabled={isValidatingCoupon}
-                      style={{
-                        background: "var(--color-gold)",
-                        color: "#000000",
-                        border: "none",
-                        padding: "0.65rem 1.25rem",
-                        borderRadius: "8px",
-                        fontFamily: "var(--font-heading)",
-                        fontSize: "0.75rem",
-                        fontWeight: 800,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {isValidatingCoupon ? "..." : "Apply"}
-                    </button>
-                  </div>
-
-                  {couponSuccess && (
-                    <span style={{ display: "block", color: "#2ecc71", fontSize: "0.75rem", marginTop: "6px" }}>
-                      ✓ {couponSuccess}
-                    </span>
-                  )}
-                  {couponError && (
-                    <span style={{ display: "block", color: "#e74c3c", fontSize: "0.75rem", marginTop: "6px" }}>
-                      ✕ {couponError}
-                    </span>
-                  )}
-                </div>
-
                 {/* Pricing Line Items */}
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid rgba(255, 255, 255, 0.08)", paddingTop: "1rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "rgba(255, 255, 255, 0.7)", fontSize: "0.85rem" }}>
                     <span>Subtotal</span>
                     <span style={{ color: "#ffffff", fontWeight: 700 }}>{formatINR(cartSubtotal)}</span>
                   </div>
-
-                  {discountAmount > 0 && (
-                    <div style={{ display: "flex", justifyContent: "space-between", color: "#2ecc71", fontSize: "0.85rem" }}>
-                      <span>VIP Privilege Discount</span>
-                      <span>- {formatINR(discountAmount)}</span>
-                    </div>
-                  )}
 
                   <div style={{ display: "flex", justifyContent: "space-between", color: "rgba(255, 255, 255, 0.7)", fontSize: "0.85rem" }}>
                     <span>Presentation Box & Courier Transit</span>
@@ -626,7 +510,7 @@ export default function CheckoutPage() {
                   <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "0.85rem", borderTop: "1px solid rgba(255, 255, 255, 0.15)", fontSize: "1.25rem", color: "#ffffff", fontWeight: 800 }}>
                     <span>Grand Total</span>
                     <span style={{ fontFamily: "var(--font-heading)", color: "var(--color-gold)" }}>
-                      {formatINR(finalGrandTotal)}
+                      {formatINR(cartSubtotal)}
                     </span>
                   </div>
                 </div>
@@ -643,7 +527,7 @@ export default function CheckoutPage() {
                     boxShadow: "0 10px 30px rgba(196, 161, 116, 0.35)",
                   }}
                 >
-                  {isSubmitting ? "Securing VIP Order..." : `Place Luxury Order (${formatINR(finalGrandTotal)})`}
+                  {isSubmitting ? "Securing VIP Order..." : `Place Luxury Order (${formatINR(cartSubtotal)})`}
                 </button>
               </div>
 

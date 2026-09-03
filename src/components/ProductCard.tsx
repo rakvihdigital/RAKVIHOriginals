@@ -88,10 +88,10 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="product-card-variants-row">
           <span className="variant-label-tiny">Size:</span>
           <div className="variant-chips-wrap">
-            {variants.slice(0, 4).map((variant) => (
+            {variants.slice(0, 2).map((variant) => (
               <button key={variant.id} type="button" onClick={(event) => handleVariantClick(event, variant)} className={`variant-chip-btn ${selectedVariant.id === variant.id ? "active" : ""}`}>{variant.sizeName}</button>
             ))}
-            {variants.length > 4 && <Link href={`/product/${product.id}`} className="variant-more-chip">+{variants.length - 4}</Link>}
+            {variants.length > 2 && <Link href={`/product/${product.id}`} className="variant-more-chip">+{variants.length - 2}</Link>}
           </div>
         </div>
         <div className="product-pricing-strip">

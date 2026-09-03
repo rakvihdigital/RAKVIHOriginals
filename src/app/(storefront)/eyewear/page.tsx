@@ -18,6 +18,7 @@ export default function EyewearPage() {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadEyewear() {
@@ -268,11 +269,19 @@ export default function EyewearPage() {
                 </button>
               </div>
             ) : (
-              filteredEyewear.map((product) => (
+              filteredEyewear.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredEyewear.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Prescription Fitting Banner */}
           <div className="subpage-ateliers-banner">

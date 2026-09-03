@@ -19,6 +19,7 @@ export default function FootwearPage() {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadFootwear() {
@@ -268,11 +269,19 @@ export default function FootwearPage() {
                 </button>
               </div>
             ) : (
-              filteredFootwear.map((product) => (
+              filteredFootwear.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredFootwear.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Custom Fit Service Banner */}
           <div className="subpage-ateliers-banner">

@@ -36,7 +36,7 @@ export default function ProfilePage() {
 
       try {
         const { data, error } = await supabase
-          .from("orders")
+          .from("Rakvih_orders")
           .select("*")
           .or(`user_id.eq.${user.id},email.eq.${user.email}`)
           .order("order_date", { ascending: false });

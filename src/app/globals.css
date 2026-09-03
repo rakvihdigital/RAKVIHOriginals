@@ -3878,7 +3878,7 @@ ul {
 
 .subpage-hero {
     position: relative;
-    padding: 6rem 0 4rem;
+    padding: 4rem 0 2.5rem;
     background: radial-gradient(circle at 50% 0%, rgba(35, 28, 18, 0.4) 0%, rgba(8, 8, 8, 0.8) 75%, var(--color-bg) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -3933,11 +3933,18 @@ ul {
     max-width: 680px;
     line-height: 1.65;
     font-weight: 300;
+    margin: 0;
 }
 
 .subpage-grid-section,
 .subpage-content-section {
-    padding: 5rem 0 7rem;
+    padding: 2rem 0 5rem;
+}
+
+.subpage-grid-section .grid-meta-bar {
+    margin-top: 0;
+    margin-bottom: 1rem !important;
+    padding-top: 0 !important;
 }
 
 .subpage-container {
@@ -4833,6 +4840,8 @@ ul {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(12px);
     position: relative;
+    content-visibility: auto;
+    contain-intrinsic-size: 420px;
 }
 
 .luxury-product-card-v2:hover {
@@ -5055,14 +5064,15 @@ ul {
     font-size: 1.05rem;
     line-height: 1.25;
     color: #f5f0eb;
-    margin: 0.25rem 0 0.75rem 0;
+    margin: 0.25rem 0 0.35rem 0;
     font-weight: 500;
     letter-spacing: 0.02em;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    height: 2.65rem;
+    height: auto;
+    max-height: 2.65rem;
     cursor: pointer;
     transition: color 0.3s ease;
 }
@@ -5665,7 +5675,7 @@ ul {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    margin: 0.25rem 0 0.75rem 0;
+    margin: 0.1rem 0 0.45rem 0;
     flex-wrap: wrap;
 }
 
@@ -8643,4 +8653,10 @@ ul {
 /* Optional: subtle zoom effect on hover */
 .luxury-product-card-v2:hover .product-main-img {
   transform: scale(1.05);
+}
+
+.product-list-more {
+    display: flex;
+    justify-content: center;
+    margin: 2.5rem 0 1rem;
 }

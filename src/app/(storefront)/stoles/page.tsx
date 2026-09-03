@@ -18,6 +18,7 @@ export default function StolesPage() {
   const [selectedGender, setSelectedGender] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadStoles() {
@@ -268,11 +269,19 @@ export default function StolesPage() {
                 </button>
               </div>
             ) : (
-              filteredStoles.map((product) => (
+              filteredStoles.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredStoles.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Silk Preservation Banner */}
           <div className="subpage-ateliers-banner">

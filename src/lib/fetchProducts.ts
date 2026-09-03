@@ -399,7 +399,7 @@ export async function fetchProductsBySubcategoryIds(
   }
 
   try {
-    const { data: dbProducts, error } = await supabase
+    const productsQuery = supabase
       .from("products")
       .select(`
         id,
@@ -427,14 +427,15 @@ export async function fetchProductsBySubcategoryIds(
       .in("subcategory_id", subcategoryIds)
       .order("id", { ascending: false });
 
-    if (error || !dbProducts) {
-      return [];
-    }
-
-    const [brandMap, attrMap] = await Promise.all([
+    const [{ data: dbProducts, error }, brandMap, attrMap] = await Promise.all([
+      productsQuery,
       fetchBrands(),
       fetchAttributesMap(),
     ]);
+
+    if (error || !dbProducts) {
+      return [];
+    }
 
     const results = dbProducts.map((item: any) => mapRawProduct(item, brandMap, attrMap));
     subcatProductsCache.set(cacheKey, { data: results, timestamp: Date.now() });

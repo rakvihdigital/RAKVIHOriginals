@@ -18,6 +18,7 @@ export default function HandbagsPage() {
   const [selectedBrand, setSelectedBrand] = useState("All");
   const [selectedPrice, setSelectedPrice] = useState("All");
   const [sortBy, setSortBy] = useState("featured");
+  const [visibleCount, setVisibleCount] = useState(40);
 
   useEffect(() => {
     async function loadHandbags() {
@@ -97,7 +98,7 @@ export default function HandbagsPage() {
       {/* Hero Section */}
       <section className="subpage-hero">
         <div className="subpage-hero-inner">
-          <div className="subpage-breadcrumbs">
+          <div className="subpage-breadcrumbs" style={{ marginBottom: "0.75rem" }}>
             <Link href="/">Home</Link> <span>/</span> <Link href="/collection-hub">Collections</Link> <span>/</span>{" "}
             <span className="active">Women&apos;s Handbags</span>
           </div>
@@ -249,11 +250,19 @@ export default function HandbagsPage() {
                 </button>
               </div>
             ) : (
-              filteredHandbags.map((product) => (
+              filteredHandbags.slice(0, visibleCount).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))
             )}
           </div>
+
+          {filteredHandbags.length > visibleCount && (
+            <div className="product-list-more">
+              <button type="button" className="hero-cta-pill" onClick={() => setVisibleCount((count) => count + 40)}>
+                View More Products
+              </button>
+            </div>
+          )}
 
           {/* Bottom Salon Banner */}
           <div className="subpage-ateliers-banner" style={{ marginTop: "5rem" }}>

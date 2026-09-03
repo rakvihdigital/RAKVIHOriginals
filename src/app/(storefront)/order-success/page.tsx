@@ -22,7 +22,7 @@ function OrderSuccessContent() {
 
       try {
         const { data } = await supabase
-          .from("orders")
+          .from("Rakvih_orders")
           .select("*")
           .eq("id", orderId)
           .single();
