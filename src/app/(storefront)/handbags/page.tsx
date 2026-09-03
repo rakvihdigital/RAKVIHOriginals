@@ -156,7 +156,7 @@ export default function HandbagsPage() {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+            <div className="storefront-filter-row" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
               {/* Search */}
               <input
                 type="text"

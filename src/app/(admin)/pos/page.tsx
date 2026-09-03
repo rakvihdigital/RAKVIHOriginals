@@ -103,7 +103,7 @@ export default function PosPage() {
           {/* Left 7 cols: Catalog Quick Picker */}
           <div className="lg:col-span-7 space-y-4">
             {/* Search & Categories Bar */}
-            <div className="bg-white border border-gray-200/80 rounded-lg p-3 flex flex-col sm:flex-row items-center gap-3">
+            <div className="admin-filter-row bg-white border border-gray-200/80 rounded-lg p-3 flex flex-col sm:flex-row items-center gap-3">
               <div className="relative flex-1 w-full">
                 <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input

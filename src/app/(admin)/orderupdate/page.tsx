@@ -70,7 +70,7 @@ export default function OrderUpdatePage() {
         </div>
 
         {/* Search */}
-        <div className="bg-white border border-gray-200/80 rounded-lg p-4 flex items-center gap-4">
+        <div className="admin-filter-row bg-white border border-gray-200/80 rounded-lg p-4 flex items-center gap-4">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input

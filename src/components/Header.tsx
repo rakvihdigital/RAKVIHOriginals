@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ShoppingCart, User, Heart, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import AuthModal from "@/components/AuthModal";
 
 const PORTAL_ROUTES = [
   "/dashboard", "/brands", "/categorysetup", "/products", "/attribute",
@@ -18,6 +19,7 @@ export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -185,7 +187,7 @@ export default function Header() {
                 </>
               ) : (
                 <button
-                  onClick={() => router.push("/login")}
+                  onClick={() => setAuthOpen(true)}
                   className="desktop-user-pill-btn text-xs font-bold uppercase tracking-wider hover:text-brand-gold"
                 >
                   <div className="desktop-avatar-circle">
@@ -318,7 +320,7 @@ export default function Header() {
                 type="button"
                 onClick={() => {
                   setMenuOpen(false);
-                  router.push("/login");
+                  setAuthOpen(true);
                 }}
                 className="mobile-auth-login-card"
               >
@@ -406,6 +408,9 @@ export default function Header() {
           </ul>
         </aside>
       </div>
+
+      {/* Login / Sign Up popup — triggered from either the desktop pill or the mobile drawer card above */}
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} defaultTab="signin" />
     </>
   );
 }

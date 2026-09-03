@@ -163,7 +163,7 @@ export default function EyewearPage() {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+            <div className="storefront-filter-row" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
               {/* Search Input */}
               <input
                 type="text"

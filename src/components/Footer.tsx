@@ -166,7 +166,7 @@ export default function Footer() {
             <h4 className="footer-col-title">CORPORATE ATELIER</h4>
             <div style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "0.82rem", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
               <p style={{ margin: 0 }}>
-                238, 2nd Main, 2nd Cross, Attur Layout, Yelahanka, Bengaluru, Karnataka 560064
+                Yelahanka, Bengaluru, Karnataka 560064
               </p>
 
               <div>

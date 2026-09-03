@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageOff } from "lucide-react";
 
 interface OptimizedImageProps {
@@ -13,7 +13,30 @@ interface OptimizedImageProps {
   width?: number;
   height?: number;
   sizes?: string;
-  style?: React.CSSProperties;
+  /**
+   * Set to false if you specifically want Next.js to proxy/resize this
+   * image through /_next/image. Defaults to true for any absolute
+   * http(s) URL, since those are almost always already served from a
+   * CDN (e.g. Supabase Storage) and don't need server-side re-encoding.
+   *
+   * WHY THIS MATTERS:
+   * Next's built-in optimizer fetches the source image on your server,
+   * resizes/re-encodes it, then serves the result. That fetch has an
+   * internal timeout (~7s in your logs). Under load — e.g. a table
+   * rendering 20 thumbnails at once — some of those fetches to Supabase
+   * Storage don't complete in time and the optimizer throws
+   * `TimeoutError`, which surfaces as a 500 on `/_next/image` and an
+   * empty/broken thumbnail. Since Supabase Storage already serves
+   * reasonably-sized, CDN-cached files, there's no real benefit to
+   * re-optimizing them server-side — skipping that step removes the
+   * timeout risk entirely and the browser loads the image directly.
+   */
+  unoptimized?: boolean;
+}
+
+function isRemoteUrl(src: string | null | undefined): boolean {
+  if (!src) return false;
+  return /^https?:\/\//i.test(src);
 }
 
 export default function OptimizedImage({
@@ -24,8 +47,8 @@ export default function OptimizedImage({
   fill = true,
   width,
   height,
-  sizes = "(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw",
-  style,
+  sizes = "100vw",
+  unoptimized,
 }: OptimizedImageProps) {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
@@ -35,41 +58,35 @@ export default function OptimizedImage({
     setErrored(false);
   }, [src]);
 
-  const cleanSrc = src && typeof src === "string" ? src.trim() : null;
-
-  if (!cleanSrc || errored) {
+  if (!src || errored) {
     return (
-      <div
-        className={`flex items-center justify-center bg-white/[0.03] backdrop-blur-sm ${className}`}
-        style={style}
-      >
-        <ImageOff className="text-white/20" size={24} />
+      <div className={`flex items-center justify-center bg-slate-100 ${className}`}>
+        <ImageOff className="text-slate-300" size={28} />
       </div>
     );
   }
 
+  // Default: skip the Next.js image optimizer for any remote (CDN) URL.
+  // Caller can still force optimization by passing unoptimized={false}.
+  const shouldSkipOptimizer = unoptimized ?? isRemoteUrl(src);
+
   return (
     <>
       {!loaded && (
-        <div
-          className={`absolute inset-0 bg-white/[0.04] animate-pulse ${
-            fill ? "" : className
-          }`}
-          style={style}
-        />
+        <div className={`absolute inset-0 bg-slate-100 animate-pulse ${fill ? "" : className}`} />
       )}
       <Image
-        src={cleanSrc}
-        alt={alt || "RAKVIH Luxury Creation"}
+        src={src}
+        alt={alt}
         fill={fill}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
         sizes={sizes}
         priority={priority}
         loading={priority ? undefined : "lazy"}
+        unoptimized={shouldSkipOptimizer}
         onLoad={() => setLoaded(true)}
         onError={() => setErrored(true)}
-        style={style}
         className={`${className} transition-opacity duration-500 ease-out ${
           loaded ? "opacity-100" : "opacity-0"
         }`}

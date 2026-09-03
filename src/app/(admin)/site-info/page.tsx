@@ -9,7 +9,6 @@ export default function SiteInfoPage() {
   const [tagline, setTagline] = useState("Luxury Maison & Signature Editions");
   const [contactEmail, setContactEmail] = useState("concierge@rakvihoriginals.com");
   const [phone, setPhone] = useState("+1 (212) 888-0018");
-  const [whatsapp, setWhatsapp] = useState("+91 98200 99401");
   const [address, setAddress] = useState("18 Avenue Montaigne, 75008 Paris • Altamount Road, Mumbai");
   const [currency, setCurrency] = useState("INR (₹)");
   const [saved, setSaved] = useState(false);
@@ -106,18 +105,6 @@ export default function SiteInfoPage() {
                   required
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-200/80 rounded-lg py-3 px-4 text-sm text-[#13102b] focus:outline-none focus:border-[#13102b] focus:ring-1 focus:ring-[#13102b]/10"
-                />
-              </div>
-
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-wider text-brand-gold mb-1.5">
-                  VIP WhatsApp Concierge
-                </label>
-                <input
-                  type="text"
-                  value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
                   className="w-full bg-gray-50 border border-gray-200/80 rounded-lg py-3 px-4 text-sm text-[#13102b] focus:outline-none focus:border-[#13102b] focus:ring-1 focus:ring-[#13102b]/10"
                 />
               </div>

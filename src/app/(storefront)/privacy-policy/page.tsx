@@ -64,7 +64,7 @@ export default function PrivacyPolicyPage() {
               <p>We may collect information when you visit our private salons, submit an inquiry, or subscribe to our newsletter:</p>
               <ul className="legal-bullet-list">
                 <li><strong>Identity Data:</strong> Full name, title, preferred salutation, and VIP salon member credentials.</li>
-                <li><strong>Contact Data:</strong> Verified email address, telephone / WhatsApp number, and billing/shipping addresses.</li>
+                <li><strong>Contact Data:</strong> Verified email address, telephone number, and billing/shipping addresses.</li>
                 <li><strong>Bespoke Profiling:</strong> Custom sizing measurements, monogram preferences, and private viewing appointment records.</li>
                 <li><strong>Transactional Data:</strong> Purchase history, certificates of authenticity, and armored delivery confirmations.</li>
               </ul>

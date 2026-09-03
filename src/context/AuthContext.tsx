@@ -1,8 +1,23 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+
 import { supabase } from "@/lib/supabase";
-import { StoreProduct, ProductVariant } from "@/lib/fetchProducts";
+
+import {
+  StoreProduct,
+  ProductVariant,
+} from "@/lib/fetchProducts";
+
+/* =====================================================
+   TYPES
+===================================================== */
 
 export interface CartItem {
   product: StoreProduct;
@@ -15,7 +30,15 @@ export interface CustomerProfile {
   auth_user_id?: string;
   name: string;
   email: string;
-  phone?: string;
+  phone?: string | null;
+  is_blocked?: boolean;
+  created_at?: string;
+  last_sign_in_at?: string | null;
+}
+
+interface AuthResult {
+  success: boolean;
+  error?: string;
 }
 
 interface AuthContextType {
@@ -23,57 +46,232 @@ interface AuthContextType {
   customer: CustomerProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+
   cart: CartItem[];
   wishlist: StoreProduct[];
+
   cartCount: number;
   wishlistCount: number;
   cartSubtotal: number;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (name: string, email: string, password: string, phone?: string) => Promise<{ success: boolean; error?: string }>;
+
+  login: (
+    email: string,
+    password: string
+  ) => Promise<AuthResult>;
+
+  register: (
+    name: string,
+    email: string,
+    password: string,
+    phone?: string
+  ) => Promise<AuthResult>;
+
   logout: () => Promise<void>;
-  addToCart: (product: StoreProduct, variant?: ProductVariant, quantity?: number) => boolean;
-  removeFromCart: (productId: number | string, variantId?: number | string) => void;
-  updateCartQuantity: (productId: number | string, quantity: number, variantId?: number | string) => void;
+
+  addToCart: (
+    product: StoreProduct,
+    variant?: ProductVariant,
+    quantity?: number
+  ) => boolean;
+
+  removeFromCart: (
+    productId: number | string,
+    variantId?: number | string
+  ) => void;
+
+  updateCartQuantity: (
+    productId: number | string,
+    quantity: number,
+    variantId?: number | string
+  ) => void;
+
   clearCart: () => void;
-  toggleWishlist: (product: StoreProduct) => boolean;
-  isInWishlist: (productId: number | string) => boolean;
+
+  toggleWishlist: (
+    product: StoreProduct
+  ) => boolean;
+
+  isInWishlist: (
+    productId: number | string
+  ) => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/* =====================================================
+   CONTEXT
+===================================================== */
+
+const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
+
+/* =====================================================
+   STORAGE KEYS
+===================================================== */
 
 const CART_STORAGE_KEY = "rakvih_user_cart_v1";
 const WISHLIST_STORAGE_KEY = "rakvih_user_wishlist_v1";
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
-  const [customer, setCustomer] = useState<CustomerProfile | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [wishlist, setWishlist] = useState<StoreProduct[]>([]);
+/* =====================================================
+   PROVIDER
+===================================================== */
 
-  // 1. Listen to Supabase Auth State
-  useEffect(() => {
-    async function initAuth() {
+export function AuthProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const [user, setUser] = useState<any | null>(null);
+
+  const [customer, setCustomer] =
+    useState<CustomerProfile | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  const [cart, setCart] = useState<CartItem[]>([]);
+
+  const [wishlist, setWishlist] =
+    useState<StoreProduct[]>([]);
+
+  /* =====================================================
+     LOAD CUSTOMER PROFILE
+  ===================================================== */
+
+  const loadCustomerProfile = useCallback(
+    async (
+      authUser: any
+    ): Promise<CustomerProfile | null> => {
+      if (!authUser?.id) {
+        return null;
+      }
+
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          setUser(session.user);
-          await loadCustomerProfile(session.user);
+        const { data, error } = await supabase
+          .from("customers")
+          .select("*")
+          .eq("auth_user_id", authUser.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error(
+            "Customer profile load error:",
+            error.message
+          );
         }
-      } catch (err) {
-        console.error("Error checking session:", err);
+
+        if (data) {
+          setCustomer(data);
+
+          return data;
+        }
+
+        /*
+          Customer profile doesn't exist.
+
+          Create it automatically.
+        */
+
+        const fallbackCustomer = {
+          auth_user_id: authUser.id,
+
+          name:
+            authUser.user_metadata?.full_name ||
+            authUser.email?.split("@")[0] ||
+            "Customer",
+
+          email: authUser.email || "",
+
+          phone:
+            authUser.user_metadata?.phone ||
+            null,
+
+          is_blocked: false,
+
+          last_sign_in_at:
+            new Date().toISOString(),
+        };
+
+        const {
+          data: createdCustomer,
+          error: createError,
+        } = await supabase
+          .from("customers")
+          .upsert(
+            fallbackCustomer,
+            {
+              onConflict: "auth_user_id",
+            }
+          )
+          .select()
+          .single();
+
+        if (createError) {
+          console.error(
+            "Customer creation error:",
+            createError.message
+          );
+
+          return null;
+        }
+
+        setCustomer(createdCustomer);
+
+        return createdCustomer;
+      } catch (error) {
+        console.error(
+          "Unexpected customer profile error:",
+          error
+        );
+
+        return null;
+      }
+    },
+    []
+  );
+
+  /* =====================================================
+     INITIAL AUTH CHECK
+  ===================================================== */
+
+  useEffect(() => {
+    let mounted = true;
+
+    async function initializeAuth() {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+
+        if (mounted && session?.user) {
+          setUser(session.user);
+
+          await loadCustomerProfile(
+            session.user
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Auth initialization error:",
+          error
+        );
       } finally {
-        setIsLoading(false);
+        if (mounted) {
+          setIsLoading(false);
+        }
       }
     }
 
-    initAuth();
+    initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
           setUser(session.user);
-          await loadCustomerProfile(session.user);
+
+          await loadCustomerProfile(
+            session.user
+          );
         } else {
           setUser(null);
           setCustomer(null);
@@ -82,258 +280,544 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     return () => {
+      mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [loadCustomerProfile]);
 
-  // 2. Load Cart & Wishlist from localStorage
+  /* =====================================================
+     LOAD LOCAL CART + WISHLIST
+  ===================================================== */
+
   useEffect(() => {
     try {
-      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (savedCart) setCart(JSON.parse(savedCart));
+      const savedCart =
+        localStorage.getItem(CART_STORAGE_KEY);
 
-      const savedWishlist = localStorage.getItem(WISHLIST_STORAGE_KEY);
-      if (savedWishlist) setWishlist(JSON.parse(savedWishlist));
-    } catch {
-      // ignore JSON parse error
+      if (savedCart) {
+        setCart(JSON.parse(savedCart));
+      }
+
+      const savedWishlist =
+        localStorage.getItem(
+          WISHLIST_STORAGE_KEY
+        );
+
+      if (savedWishlist) {
+        setWishlist(
+          JSON.parse(savedWishlist)
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Storage loading error:",
+        error
+      );
     }
   }, []);
 
-  // 3. Save Cart & Wishlist on change
+  /* =====================================================
+     SAVE CART
+  ===================================================== */
+
   useEffect(() => {
     try {
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
+      localStorage.setItem(
+        CART_STORAGE_KEY,
+        JSON.stringify(cart)
+      );
     } catch {
-      // ignore
+      // Ignore storage errors
     }
   }, [cart]);
 
+  /* =====================================================
+     SAVE WISHLIST
+  ===================================================== */
+
   useEffect(() => {
     try {
-      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlist));
+      localStorage.setItem(
+        WISHLIST_STORAGE_KEY,
+        JSON.stringify(wishlist)
+      );
     } catch {
-      // ignore
+      // Ignore storage errors
     }
   }, [wishlist]);
 
-  // Load customer profile row from DB
-  async function loadCustomerProfile(authUser: any) {
-    try {
-      const { data } = await supabase
-        .from("customers")
-        .select("*")
-        .eq("auth_user_id", authUser.id)
-        .single();
+  /* =====================================================
+     LOGIN
+  ===================================================== */
 
-      if (data) {
-        setCustomer(data);
-      } else {
-        // Fallback to user metadata
-        setCustomer({
-          name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "VIP Member",
-          email: authUser.email || "",
-          phone: authUser.user_metadata?.phone || "",
+  async function login(
+    email: string,
+    password: string
+  ): Promise<AuthResult> {
+    try {
+      const { data, error } =
+        await supabase.auth.signInWithPassword({
+          email: email.trim().toLowerCase(),
+          password,
         });
-      }
-    } catch {
-      setCustomer({
-        name: authUser.email?.split("@")[0] || "VIP Member",
-        email: authUser.email || "",
-      });
-    }
-  }
-
-  // Login
-  async function login(email: string, password: string) {
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
 
       if (error) {
-        return { success: false, error: error.message };
+        return {
+          success: false,
+          error: error.message,
+        };
       }
 
-      if (data.user) {
-        setUser(data.user);
+      if (!data.user) {
+        return {
+          success: false,
+          error: "Login failed.",
+        };
+      }
+
+      const customerProfile =
         await loadCustomerProfile(data.user);
-        return { success: true };
+
+      /*
+        CHECK IF BLOCKED
+      */
+
+      if (customerProfile?.is_blocked) {
+        await supabase.auth.signOut();
+
+        setUser(null);
+        setCustomer(null);
+
+        return {
+          success: false,
+          error:
+            "Your account has been blocked. Please contact support.",
+        };
       }
 
-      return { success: false, error: "Login failed" };
-    } catch (err: any) {
-      return { success: false, error: err.message || "An unexpected error occurred" };
+      /*
+        UPDATE LAST LOGIN
+      */
+
+      await supabase
+        .from("customers")
+        .update({
+          last_sign_in_at:
+            new Date().toISOString(),
+        })
+        .eq(
+          "auth_user_id",
+          data.user.id
+        );
+
+      setUser(data.user);
+
+      return {
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error:
+          error?.message ||
+          "An unexpected error occurred.",
+      };
     }
   }
 
-  // Register
-  async function register(name: string, email: string, password: string, phone?: string) {
+  /* =====================================================
+     REGISTER
+  ===================================================== */
+
+  async function register(
+    name: string,
+    email: string,
+    password: string,
+    phone?: string
+  ): Promise<AuthResult> {
     try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
+      const normalizedEmail =
+        email.trim().toLowerCase();
+
+      /*
+        CREATE AUTH USER
+      */
+
+      const {
+        data,
+        error,
+      } = await supabase.auth.signUp({
+        email: normalizedEmail,
+
         password,
+
         options: {
           data: {
-            full_name: name,
-            phone: phone || "",
+            full_name: name.trim(),
+            phone: phone?.trim() || "",
           },
         },
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        return {
+          success: false,
+          error: error.message,
+        };
       }
 
-      if (data.user) {
-        setUser(data.user);
-        // Insert record into customers table
-        try {
-          await supabase.from("customers").insert([
-            {
-              auth_user_id: data.user.id,
-              name,
-              email,
-              phone: phone || null,
-              is_blocked: false,
-              created_at: new Date().toISOString(),
-              last_sign_in_at: new Date().toISOString(),
-            },
-          ]);
-        } catch (dbErr) {
-          console.error("Could not insert into customers table:", dbErr);
-        }
-
-        setCustomer({ name, email, phone });
-        return { success: true };
+      if (!data.user) {
+        return {
+          success: false,
+          error:
+            "Account creation failed.",
+        };
       }
 
-      return { success: false, error: "Registration failed" };
-    } catch (err: any) {
-      return { success: false, error: err.message || "An unexpected error occurred" };
-    }
-  }
+      /*
+        CREATE CUSTOMER TABLE RECORD
+      */
 
-  // Logout
-  async function logout() {
-    await supabase.auth.signOut();
-    setUser(null);
-    setCustomer(null);
-  }
+      const customerData = {
+        auth_user_id: data.user.id,
 
-  // Add to cart
-  function addToCart(product: StoreProduct, variant?: ProductVariant, quantity: number = 1): boolean {
-    if (!user) {
-      return false; // Not authenticated
-    }
+        name: name.trim(),
 
-    const effectiveVariant = variant || (product.variants && product.variants.length > 0 ? product.variants[0] : undefined);
-    const variantId = effectiveVariant?.id;
+        email: normalizedEmail,
 
-    setCart((prev) => {
-      const existingIdx = prev.findIndex(
-        (item) =>
-          item.product.id === product.id &&
-          ((!variantId && !item.variant?.id) || item.variant?.id === variantId)
+        phone:
+          phone?.trim() || null,
+
+        is_blocked: false,
+
+        last_sign_in_at:
+          new Date().toISOString(),
+      };
+
+      const {
+        data: insertedCustomer,
+        error: customerError,
+      } = await supabase
+        .from("customers")
+        .upsert(
+          customerData,
+          {
+            onConflict:
+              "auth_user_id",
+          }
+        )
+        .select()
+        .single();
+
+      if (customerError) {
+        console.error(
+          "Customer insert error:",
+          customerError.message
+        );
+
+        return {
+          success: false,
+          error:
+            "Account was created, but customer details could not be saved. Please contact support.",
+        };
+      }
+
+      setUser(data.user);
+
+      setCustomer(
+        insertedCustomer
       );
 
-      if (existingIdx > -1) {
-        const updated = [...prev];
-        updated[existingIdx].quantity += quantity;
-        return updated;
+      return {
+        success: true,
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        error:
+          error?.message ||
+          "An unexpected error occurred.",
+      };
+    }
+  }
+
+  /* =====================================================
+     LOGOUT
+  ===================================================== */
+
+  async function logout(): Promise<void> {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error(
+        "Logout error:",
+        error
+      );
+    } finally {
+      setUser(null);
+      setCustomer(null);
+    }
+  }
+
+  /* =====================================================
+     ADD TO CART
+  ===================================================== */
+
+  function addToCart(
+    product: StoreProduct,
+    variant?: ProductVariant,
+    quantity: number = 1
+  ): boolean {
+    if (!user) {
+      return false;
+    }
+
+    const effectiveVariant =
+      variant ||
+      (
+        product.variants &&
+        product.variants.length > 0
+          ? product.variants[0]
+          : undefined
+      );
+
+    const variantId =
+      effectiveVariant?.id;
+
+    setCart((previous) => {
+      const existingIndex =
+        previous.findIndex(
+          (item) =>
+            item.product.id ===
+              product.id &&
+            (
+              (
+                !variantId &&
+                !item.variant?.id
+              ) ||
+              item.variant?.id ===
+                variantId
+            )
+        );
+
+      if (existingIndex > -1) {
+        return previous.map(
+          (item, index) => {
+            if (
+              index ===
+              existingIndex
+            ) {
+              return {
+                ...item,
+                quantity:
+                  item.quantity +
+                  quantity,
+              };
+            }
+
+            return item;
+          }
+        );
       }
 
-      return [...prev, { product, variant: effectiveVariant, quantity }];
+      return [
+        ...previous,
+        {
+          product,
+          variant:
+            effectiveVariant,
+          quantity,
+        },
+      ];
     });
 
     return true;
   }
 
-  // Remove from cart
-  function removeFromCart(productId: number | string, variantId?: number | string) {
-    setCart((prev) =>
-      prev.filter(
+  /* =====================================================
+     REMOVE FROM CART
+  ===================================================== */
+
+  function removeFromCart(
+    productId: number | string,
+    variantId?: number | string
+  ) {
+    setCart((previous) =>
+      previous.filter(
         (item) =>
           !(
-            item.product.id === productId &&
-            (!variantId || item.variant?.id === variantId)
+            item.product.id ===
+              productId &&
+            (
+              variantId === undefined ||
+              item.variant?.id ===
+                variantId
+            )
           )
       )
     );
   }
 
-  // Update cart quantity
-  function updateCartQuantity(productId: number | string, quantity: number, variantId?: number | string) {
+  /* =====================================================
+     UPDATE CART QUANTITY
+  ===================================================== */
+
+  function updateCartQuantity(
+    productId: number | string,
+    quantity: number,
+    variantId?: number | string
+  ) {
     if (quantity <= 0) {
-      removeFromCart(productId, variantId);
+      removeFromCart(
+        productId,
+        variantId
+      );
+
       return;
     }
 
-    setCart((prev) =>
-      prev.map((item) => {
+    setCart((previous) =>
+      previous.map((item) => {
         if (
-          item.product.id === productId &&
-          (!variantId || item.variant?.id === variantId)
+          item.product.id ===
+            productId &&
+          (
+            variantId === undefined ||
+            item.variant?.id ===
+              variantId
+          )
         ) {
-          return { ...item, quantity };
+          return {
+            ...item,
+            quantity,
+          };
         }
+
         return item;
       })
     );
   }
 
+  /* =====================================================
+     CLEAR CART
+  ===================================================== */
+
   function clearCart() {
     setCart([]);
   }
 
-  // Toggle wishlist
-  function toggleWishlist(product: StoreProduct): boolean {
+  /* =====================================================
+     TOGGLE WISHLIST
+  ===================================================== */
+
+  function toggleWishlist(
+    product: StoreProduct
+  ): boolean {
     if (!user) {
-      return false; // Must login
+      return false;
     }
 
-    setWishlist((prev) => {
-      const exists = prev.some((item) => item.id === product.id);
+    setWishlist((previous) => {
+      const exists =
+        previous.some(
+          (item) =>
+            item.id ===
+            product.id
+        );
+
       if (exists) {
-        return prev.filter((item) => item.id !== product.id);
+        return previous.filter(
+          (item) =>
+            item.id !==
+            product.id
+        );
       }
-      return [...prev, product];
+
+      return [
+        ...previous,
+        product,
+      ];
     });
 
     return true;
   }
 
-  function isInWishlist(productId: number | string): boolean {
-    return wishlist.some((item) => item.id === productId);
+  /* =====================================================
+     CHECK WISHLIST
+  ===================================================== */
+
+  function isInWishlist(
+    productId: number | string
+  ): boolean {
+    return wishlist.some(
+      (item) =>
+        item.id === productId
+    );
   }
 
-  const cartCount = cart.reduce((total, item) => total + item.quantity, 0);
-  const wishlistCount = wishlist.length;
+  /* =====================================================
+     COUNTS
+  ===================================================== */
 
-  const cartSubtotal = cart.reduce((total, item) => {
-    const itemPrice = item.variant?.salePrice || item.variant?.price || item.product.priceValue || 0;
-    return total + itemPrice * item.quantity;
-  }, 0);
+  const cartCount =
+    cart.reduce(
+      (total, item) =>
+        total + item.quantity,
+      0
+    );
+
+  const wishlistCount =
+    wishlist.length;
+
+  const cartSubtotal =
+    cart.reduce(
+      (total, item) => {
+        const itemPrice =
+          item.variant?.salePrice ||
+          item.variant?.price ||
+          item.product.priceValue ||
+          0;
+
+        return (
+          total +
+          itemPrice *
+            item.quantity
+        );
+      },
+      0
+    );
+
+  /* =====================================================
+     PROVIDER
+  ===================================================== */
 
   return (
     <AuthContext.Provider
       value={{
         user,
         customer,
-        isAuthenticated: Boolean(user),
+
+        isAuthenticated:
+          Boolean(user),
+
         isLoading,
+
         cart,
         wishlist,
+
         cartCount,
         wishlistCount,
         cartSubtotal,
+
         login,
         register,
         logout,
+
         addToCart,
         removeFromCart,
         updateCartQuantity,
         clearCart,
+
         toggleWishlist,
         isInWishlist,
       }}
@@ -343,10 +827,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* =====================================================
+   AUTH HOOK
+===================================================== */
+
 export function useAuth() {
-  const context = useContext(AuthContext);
+  const context =
+    useContext(AuthContext);
+
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error(
+      "useAuth must be used within an AuthProvider"
+    );
   }
+
   return context;
 }

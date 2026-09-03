@@ -264,7 +264,7 @@ function LoginFormContent() {
 
           <div>
             <label style={{ display: "block", fontSize: "0.72rem", fontFamily: "var(--font-heading)", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "0.5rem", fontWeight: 700 }}>
-              Phone / WhatsApp (Optional)
+              Phone (Optional)
             </label>
             <input
               type="tel"

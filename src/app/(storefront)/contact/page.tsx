@@ -38,18 +38,12 @@ export default function ContactPage() {
       link: "tel:+918296392047",
       desc: "Dedicated personal styling & assistance line.",
     },
-    {
-      title: "VIP WhatsApp Concierge",
-      detail: "+91 98200 99401",
-      link: "https://wa.me/919820099401",
-      desc: "Instant priority messaging for registered collectors.",
-    },
   ];
 
   const locations = [
     {
       city: "BENGALURU HEADQUARTERS",
-      address: "238, 2nd Main, 2nd Cross, Attur Layout, Yelahanka, Bengaluru, Karnataka 560064",
+      address: "Yelahanka, Bengaluru, Karnataka 560064",
       phone: "+91 82963 92047",
       hours: "Mon – Sat: 09:30 – 19:00 IST",
     },
@@ -70,7 +64,7 @@ export default function ContactPage() {
   const faqs = [
     {
       q: "How can I schedule a private viewing appointment?",
-      a: "You may complete the inquiry form below or contact our VIP concierge directly via WhatsApp. An advisor will confirm your private salon slot within 2 hours.",
+      a: "You may complete the inquiry form below or contact our direct client helpline. An advisor will confirm your private salon slot within 2 hours.",
     },
     {
       q: "Do you offer bespoke leather monogramming and custom sizing?",
@@ -180,7 +174,7 @@ export default function ContactPage() {
                       />
                     </div>
                     <div className="form-group">
-                      <label>Phone / WhatsApp</label>
+                      <label>Phone</label>
                       <input
                         type="tel"
                         placeholder="+91 98200 00000"

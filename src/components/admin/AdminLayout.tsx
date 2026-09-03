@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       />
 
       {/* Added min-w-0 to prevent tables from blowing out the layout width */}
-      <div className="flex-1 flex flex-col h-screen overflow-y-auto min-w-0 w-full">
+      <div className="exec-admin-main flex-1 flex flex-col h-screen overflow-y-auto min-w-0">
         <AdminHeader
           role={role}
           onToggleRole={handleToggleRole}
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         />
 
         <main className="flex-1 p-5 md:p-7 lg:p-8">
-          <div className="w-full max-w-[1400px] mx-auto space-y-6">
+          <div className="w-full max-w-[1400px] mx-auto space-y-6 min-w-0">
             {children}
           </div>
         </main>

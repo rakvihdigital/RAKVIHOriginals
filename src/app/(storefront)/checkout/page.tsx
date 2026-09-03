@@ -308,7 +308,7 @@ export default function CheckoutPage() {
 
                   <div>
                     <label style={{ display: "block", fontSize: "0.72rem", fontFamily: "var(--font-heading)", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "0.4rem", fontWeight: 700 }}>
-                      Primary Phone (WhatsApp) *
+                      Primary Phone *
                     </label>
                     <input
                       type="tel"

@@ -46,7 +46,7 @@ export default function ListBrandsPage() {
         </div>
 
         {/* Filter Controls */}
-        <div className="bg-white border border-gray-200/80 rounded-lg p-4 flex flex-col md:flex-row items-center gap-4">
+        <div className="admin-filter-row bg-white border border-gray-200/80 rounded-lg p-4 flex flex-col md:flex-row items-center gap-4">
           <div className="relative flex-1 w-full">
             <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
             <input

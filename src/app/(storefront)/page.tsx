@@ -16,7 +16,7 @@ export default function Home() {
 
         async function loadData() {
             setIsLoading(true);
-            const data = await fetchHomepage4CategoriesLatest(6);
+            const data = await fetchHomepage4CategoriesLatest(8);
             setCategoriesData(data);
             setIsLoading(false);
         }
@@ -146,347 +146,339 @@ export default function Home() {
                 </div>
             </section>
 
-            {/*  ============================================================  */}
-            {/*  1. HAUTE HANDBAGS — LATEST ARRIVALS UNDER HERO 1               */}
-            {/*  ============================================================  */}
-            <section id="handbags-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
-                <div className="container">
-                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
-                        <div className="spotlight-header-left">
-                            <div className="accent-line-row">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Maison Maroquinerie</span>
-                            </div>
-                            <h2 className="spotlight-title">
-                                <span className="spotlight-title-main">Latest</span>
-                                <span className="spotlight-title-italic">Handbags.</span>
-                            </h2>
-                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                                Discover curated women&apos;s luxury leather handbags crafted for timeless elegance.
-                            </p>
+        {/* ============================================================ */}
+        {/*  1. HAUTE HANDBAGS — LATEST ARRIVALS UNDER HERO 1             */}
+        {/* ============================================================ */}
+        <section id="handbags-section" className="section" style={{ padding: "1.5rem 0 1rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
+            <div className="container">
+                <div className="spotlight-header reveal-element" style={{ marginBottom: "1rem" }}>
+                    <div className="spotlight-header-left">
+                        <div className="accent-line-row" style={{ marginBottom: "0.25rem" }}>
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Maison Maroquinerie</span>
                         </div>
-                        <Link href="/handbags" className="shop-drop-link" id="handbags-explore-btn">
-                            <span>Explore All Handbags</span>
-                            <div className="shop-drop-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
+                        <h2 className="spotlight-title">
+                            <span className="spotlight-title-main">Latest Handbags.</span>
+                        </h2>
+                        <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                            Discover curated women&apos;s luxury leather handbags crafted for timeless elegance.
+                        </p>
+                    </div>
+                    <Link href="/handbags" className="shop-drop-link" id="handbags-explore-btn">
+                        <span>Explore All Handbags</span>
+                        <div className="shop-drop-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </Link>
+                </div>
+
+                <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
+                    {isLoading ? (
+                        <ProductGridSkeleton count={8} />
+                    ) : Array.isArray(categoriesData?.handbags) && categoriesData.handbags.length > 0 ? (
+                        categoriesData.handbags.slice(0, 8).map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))
+                    ) : (
+                        <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "2rem 0", color: "rgba(255,255,255,0.6)" }}>
+                            Loading latest handbags...
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+
+{/* ============================================================ */}
+        {/*  HERO 2 — L.V TRAINER SNEAKER SCROLL ANIMATION               */}
+        {/* ============================================================ */}
+        <section id="hero2" className="hero-section" style={{ paddingTop: "0", minHeight: "auto", marginTop: "-3rem" }}>
+            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingBottom: "0.2rem" }}>
+                <div className="hero-accent-line reveal-element justify-center mb-1">
+                    <span className="accent-label">Explore Category</span>
+                </div>
+                <h2 className="hero-title-bold reveal-element delay-1" style={{ textAlign: 'center', marginTop: '0', marginBottom: '0.1rem' }}>
+                    OUR FOOTWEAR<br />
+                    <span className="relative inline-block pb-1 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[2px] after:bg-gradient-to-r after:from-transparent after:via-[var(--color-gold)] after:to-transparent after:opacity-80" style={{ color: 'var(--color-gold)' }}>COLLECTION</span>
+                </h2>
+                <p className="reveal-element delay-2" style={{ maxWidth: '600px', margin: '0.1rem auto 0.4rem auto', fontFamily: 'var(--font-serif)', fontSize: '1.1rem', fontStyle: 'italic', letterSpacing: '0.03em', color: 'var(--color-gold)', lineHeight: '1.4', fontWeight: 300 }}>
+                    Step into elegance with our expertly crafted footwear, designed to combine high-end luxury with modern streetwear.
+                </p>
+            </div>
+            
+            <div className="hero-scroll-container" style={{ marginTop: "0" }}>
+                <div className="hero-sticky">
+                    <canvas id="hero-canvas-2" className="hero-canvas"></canvas>
+                    <div className="hero-gradient-overlay"></div>
+
+                    <div className="hero-text-overlay text-first" id="hero2-text-1">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">New Drop 2026</span>
+                        </div>
+                        <h2 className="hero-title-bold">
+                            THE ICONIC <span className="hero-title-stroke">TRAINER</span>
+                        </h2>
+                        <p className="hero-desc">Where streetwear meets haute couture. A sneaker born from artistic vision.</p>
                     </div>
 
-                    <div className="luxury-product-grid-v2">
-                        {isLoading ? (
-                            <ProductGridSkeleton count={6} />
-                        ) : categoriesData?.handbags && categoriesData.handbags.length > 0 ? (
-                            categoriesData.handbags.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))
-                        ) : (
-                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
-                                Loading latest handbags...
-                            </div>
-                        )}
+                    <div className="hero-text-overlay pos-top-right" id="hero2-text-2" data-start="0.15" data-end="0.28">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Construction</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            HAND <span className="hero-title-stroke">STITCHED</span>
+                        </h2>
+                        <p className="hero-desc">Over 30 components assembled by master cobblers — Italian calfskin upper with reinforced rubber sole.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-bottom-left" id="hero2-text-3" data-start="0.30" data-end="0.45">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Materials</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            GRAINED <span className="hero-title-stroke">LEATHER</span>
+                        </h2>
+                        <p className="hero-desc">Supple calf leather embossed with the classic monogram pattern. Built for all-day comfort.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-top-right" id="hero2-text-4" data-start="0.47" data-end="0.58">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Sole</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            GEL-CUSHION <span className="hero-title-stroke">OUTSOLE</span>
+                        </h2>
+                        <p className="hero-desc">Technical rubber sole with monogram flowers insert. Unrivalled grip and impact absorption.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-bottom-left" id="hero2-text-5" data-start="0.60" data-end="0.72">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Identity</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            VINTAGE <span className="hero-title-stroke">BASKETBALL</span>
+                        </h2>
+                        <p className="hero-desc">Inspired by vintage basketball sneakers. 7 hours of stitching per pair.</p>
+                    </div>
+
+                    <div className="hero-text-overlay text-last" id="hero2-text-6">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">The Edit</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            STEP INTO <span className="hero-title-stroke">LUXURY</span>
+                        </h2>
+                        <p className="hero-desc">The sneaker of the season. Available in limited quantities.</p>
+                        <Link href="/footwear" className="hero-cta-pill">Explore Footwear</Link>
+                    </div>
+
+                    {/*  SLIDE COUNTER  */}
+                    <div className="hero-counter">
+                        <span className="counter-current">01</span>
+                        <div className="counter-divider"></div>
+                        <span className="counter-total">06</span>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {/*  ============================================================  */}
-            {/*  HERO 2 — L.V TRAINER SNEAKER SCROLL ANIMATION                  */}
-            {/*  ============================================================  */}
-            <section id="hero2" className="hero-section">
-                <div className="pt-6 pb-6 z-10 relative flex flex-col items-center text-center">
-                    <div className="hero-accent-line reveal-element justify-center mb-4">
-                        <span className="accent-label">Explore Category</span>
+{/* ============================================================ */}
+        {/*  2. LUXURY FOOTWEAR — LATEST ARRIVALS UNDER HERO 2             */}
+        {/* ============================================================ */}
+        <section id="footwear-section" className="section" style={{ padding: "1.5rem 0 1rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
+            <div className="container">
+                <div className="spotlight-header reveal-element" style={{ marginBottom: "1rem" }}>
+                    <div className="spotlight-header-left">
+                        <div className="accent-line-row" style={{ marginBottom: "0.25rem" }}>
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Maison Cobblery</span>
+                        </div>
+                        <h2 className="spotlight-title">
+                            <span className="spotlight-title-main">Luxury Footwear.</span>
+                        </h2>
+                        <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                            Hand-assembled sneakers, slides, and runners fusing Italian craftsmanship with streetwear.
+                        </p>
                     </div>
-                    <h2 className="hero-title-bold reveal-element delay-1" style={{ textAlign: 'center' }}>
-                        OUR FOOTWEAR<br />
-                        <span className="relative inline-block pb-1 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[2px] after:bg-gradient-to-r after:from-transparent after:via-[var(--color-gold)] after:to-transparent after:opacity-80" style={{ color: 'var(--color-gold)' }}>COLLECTION</span>
-                    </h2>
-                    <p className="reveal-element delay-2" style={{ maxWidth: '600px', margin: '0.5rem auto 1.5rem auto', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontStyle: 'italic', letterSpacing: '0.03em', color: 'var(--color-gold)', lineHeight: '1.7', fontWeight: 300 }}>
-                        Step into elegance with our expertly crafted footwear, designed to combine high-end luxury with modern streetwear.
-                    </p>
+                    <Link href="/footwear" className="shop-drop-link" id="footwear-explore-btn">
+                        <span>Explore All Footwear</span>
+                        <div className="shop-drop-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </Link>
                 </div>
-                <div className="hero-scroll-container">
-                    <div className="hero-sticky">
-                        <canvas id="hero-canvas-2" className="hero-canvas"></canvas>
-                        <div className="hero-gradient-overlay"></div>
 
-                        <div className="hero-text-overlay text-first" id="hero2-text-1">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">New Drop 2026</span>
-                            </div>
-                            <h2 className="hero-title-bold">
-                                THE ICONIC <span className="hero-title-stroke">TRAINER</span>
-                            </h2>
-                            <p className="hero-desc">Where streetwear meets haute couture. A sneaker born from artistic vision.</p>
+                <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
+                    {isLoading ? (
+                        <ProductGridSkeleton count={8} />
+                    ) : categoriesData?.footwear && categoriesData.footwear.length > 0 ? (
+                        categoriesData.footwear.slice(0, 8).map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))
+                    ) : (
+                        <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "2rem 0", color: "rgba(255,255,255,0.6)" }}>
+                            Loading latest footwear...
                         </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero2-text-2" data-start="0.15" data-end="0.28">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Construction</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                HAND <span className="hero-title-stroke">STITCHED</span>
-                            </h2>
-                            <p className="hero-desc">Over 30 components assembled by master cobblers — Italian calfskin upper with
-                                reinforced rubber sole.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero2-text-3" data-start="0.30" data-end="0.45">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Materials</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                GRAINED <span className="hero-title-stroke">LEATHER</span>
-                            </h2>
-                            <p className="hero-desc">Supple calf leather embossed with the classic monogram pattern. Built for all-day
-                                comfort.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero2-text-4" data-start="0.47" data-end="0.58">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Sole</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                GEL-CUSHION <span className="hero-title-stroke">OUTSOLE</span>
-                            </h2>
-                            <p className="hero-desc">Technical rubber sole with monogram flowers insert. Unrivalled grip and impact
-                                absorption.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero2-text-5" data-start="0.60" data-end="0.72">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Identity</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                VINTAGE <span className="hero-title-stroke">BASKETBALL</span>
-                            </h2>
-                            <p className="hero-desc">Inspired by vintage basketball sneakers. 7 hours of stitching per pair.</p>
-                        </div>
-
-                        <div className="hero-text-overlay text-last" id="hero2-text-6">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">The Edit</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                STEP INTO <span className="hero-title-stroke">LUXURY</span>
-                            </h2>
-                            <p className="hero-desc">The sneaker of the season. Available in limited quantities.</p>
-                            <Link href="/footwear" className="hero-cta-pill">Explore Footwear</Link>
-                        </div>
-
-                        {/*  SLIDE COUNTER  */}
-                        <div className="hero-counter">
-                            <span className="counter-current">01</span>
-                            <div className="counter-divider"></div>
-                            <span className="counter-total">06</span>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {/*  ============================================================  */}
-            {/*  2. LUXURY FOOTWEAR — LATEST ARRIVALS UNDER HERO 2             */}
-            {/*  ============================================================  */}
-            <section id="footwear-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
-                <div className="container">
-                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
-                        <div className="spotlight-header-left">
-                            <div className="accent-line-row">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Maison Cobblery</span>
-                            </div>
-                            <h2 className="spotlight-title">
-                                <span className="spotlight-title-main">Luxury</span>
-                                <span className="spotlight-title-italic">Footwear.</span>
-                            </h2>
-                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                                Hand-assembled sneakers, slides, and runners fusing Italian craftsmanship with streetwear.
-                            </p>
+        {/* ============================================================ */}
+        {/*  HERO 6 — BELTS SCROLL ANIMATION                             */}
+        {/* ============================================================ */}
+        <section id="hero6" className="hero-section" style={{ paddingTop: "0", minHeight: "auto", marginTop: "-3rem" }}>
+            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingBottom: "0.2rem" }}>
+                <div className="hero-accent-line reveal-element justify-center mb-1">
+                    <span className="accent-label">Explore Category</span>
+                </div>
+                <h2 className="hero-title-bold reveal-element delay-1" style={{ textAlign: 'center', marginTop: '0', marginBottom: '0.1rem' }}>
+                    BELT<br />
+                    <span className="relative inline-block pb-1 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[2px] after:bg-gradient-to-r after:from-transparent after:via-[var(--color-gold)] after:to-transparent after:opacity-80" style={{ color: 'var(--color-gold)' }}>COLLECTION</span>
+                </h2>
+                <p className="reveal-element delay-2" style={{ maxWidth: '600px', margin: '0.1rem auto 0.4rem auto', fontFamily: 'var(--font-serif)', fontSize: '1.1rem', fontStyle: 'italic', letterSpacing: '0.03em', color: 'var(--color-gold)', lineHeight: '1.4', fontWeight: 300 }}>
+                    The perfect finishing touch. Discover our collection of signature belts crafted from premium materials.
+                </p>
+            </div>
+            <div className="hero-scroll-container" style={{ marginTop: "0" }}>
+                <div className="hero-sticky">
+                    <canvas id="hero-canvas-6" className="hero-canvas"></canvas>
+                    <div className="hero-gradient-overlay"></div>
+
+                    <div className="hero-text-overlay text-first" id="hero6-text-1">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">L.V Belts</span>
                         </div>
-                        <Link href="/footwear" className="shop-drop-link" id="footwear-explore-btn">
-                            <span>Explore All Footwear</span>
-                            <div className="shop-drop-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
+                        <h2 className="hero-title-bold">
+                            THE LUXURY <span className="hero-title-stroke">BELT</span>
+                        </h2>
+                        <p className="hero-desc">Elevate your silhouette. The signature L.V belt collection.</p>
                     </div>
 
-                    <div className="luxury-product-grid-v2">
-                        {isLoading ? (
-                            <ProductGridSkeleton count={6} />
-                        ) : categoriesData?.footwear && categoriesData.footwear.length > 0 ? (
-                            categoriesData.footwear.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))
-                        ) : (
-                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
-                                Loading latest footwear...
-                            </div>
-                        )}
+                    <div className="hero-text-overlay pos-top-right" id="hero6-text-2" data-start="0.15" data-end="0.28">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Hardware</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            SIGNATURE <span className="hero-title-stroke">BUCKLE</span>
+                        </h2>
+                        <p className="hero-desc">Gleaming hardware crafted with precision, featuring the iconic L.V initials.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-bottom-left" id="hero6-text-3" data-start="0.30" data-end="0.45">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Materials</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            TAURILLON <span className="hero-title-stroke">LEATHER</span>
+                        </h2>
+                        <p className="hero-desc">Sumptuous full-grain leather with a distinctive natural grain texture.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-top-right" id="hero6-text-4" data-start="0.47" data-end="0.58">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Versatility</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            REVERSIBLE <span className="hero-title-stroke">DESIGN</span>
+                        </h2>
+                        <p className="hero-desc">Two styles in one. Monogram canvas on one side, smooth calf leather on the other.</p>
+                    </div>
+
+                    <div className="hero-text-overlay pos-bottom-left" id="hero6-text-5" data-start="0.60" data-end="0.72">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Width</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            40MM <span className="hero-title-stroke">PROFILE</span>
+                        </h2>
+                        <p className="hero-desc">The classic 40mm width — bold enough to make a statement, versatile enough for any loop.</p>
+                    </div>
+
+                    <div className="hero-text-overlay text-last" id="hero6-text-6">
+                        <div className="hero-accent-line">
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">The Edit</span>
+                        </div>
+                        <h2 className="hero-title-bold hero-title-md">
+                            COMPLETE YOUR <span className="hero-title-stroke">LOOK</span>
+                        </h2>
+                        <p className="hero-desc">The definitive accessory for the modern wardrobe.</p>
+                        <Link href="/belts" className="hero-cta-pill">Explore Belts</Link>
+                    </div>
+
+                    {/*  SLIDE COUNTER  */}
+                    <div className="hero-counter">
+                        <span className="counter-current">01</span>
+                        <div className="counter-divider"></div>
+                        <span className="counter-total">06</span>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {/*  ============================================================  */}
-            {/*  HERO 6 — BELTS SCROLL ANIMATION                               */}
-            {/*  ============================================================  */}
-            <section id="hero6" className="hero-section">
-                <div className="pt-6 pb-6 z-10 relative flex flex-col items-center text-center">
-                    <div className="hero-accent-line reveal-element justify-center mb-4">
-                        <span className="accent-label">Explore Category</span>
+        {/* ============================================================ */}
+        {/*  3. SIGNATURE BELTS — LATEST ARRIVALS UNDER HERO 6             */}
+        {/* ============================================================ */}
+        <section id="belts-section" className="section" style={{ padding: "1.5rem 0 1rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
+            <div className="container">
+                <div className="spotlight-header reveal-element" style={{ marginBottom: "1rem" }}>
+                    <div className="spotlight-header-left">
+                        <div className="accent-line-row" style={{ marginBottom: "0.25rem" }}>
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Maison Ceinturerie</span>
+                        </div>
+                        <h2 className="spotlight-title">
+                            <span className="spotlight-title-main">Signature Belts.</span>
+                        </h2>
+                        <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                            Reversible calfskin leather belts with polished gold and silver tone hardware.
+                        </p>
                     </div>
-                    <h2 className="hero-title-bold reveal-element delay-1" style={{ textAlign: 'center' }}>
-                        BELT<br />
-                        <span className="relative inline-block pb-1 after:content-[''] after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-3/4 after:h-[2px] after:bg-gradient-to-r after:from-transparent after:via-[var(--color-gold)] after:to-transparent after:opacity-80" style={{ color: 'var(--color-gold)' }}>COLLECTION</span>
-                    </h2>
-                    <p className="reveal-element delay-2" style={{ maxWidth: '600px', margin: '0.5rem auto 1.5rem auto', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', fontStyle: 'italic', letterSpacing: '0.03em', color: 'var(--color-gold)', lineHeight: '1.7', fontWeight: 300 }}>
-                        The perfect finishing touch. Discover our collection of signature belts crafted from premium materials.
-                    </p>
+                    <Link href="/belts" className="shop-drop-link" id="belts-explore-btn">
+                        <span>Explore All Belts</span>
+                        <div className="shop-drop-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </Link>
                 </div>
-                <div className="hero-scroll-container">
-                    <div className="hero-sticky">
-                        <canvas id="hero-canvas-6" className="hero-canvas"></canvas>
-                        <div className="hero-gradient-overlay"></div>
 
-                        <div className="hero-text-overlay text-first" id="hero6-text-1">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">L.V Belts</span>
-                            </div>
-                            <h2 className="hero-title-bold">
-                                THE LUXURY <span className="hero-title-stroke">BELT</span>
-                            </h2>
-                            <p className="hero-desc">Elevate your silhouette. The signature L.V belt collection.</p>
+                <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
+                    {isLoading ? (
+                        <ProductGridSkeleton count={8} />
+                    ) : categoriesData?.belts && categoriesData.belts.length > 0 ? (
+                        categoriesData.belts.slice(0, 8).map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))
+                    ) : (
+                        <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "2rem 0", color: "rgba(255,255,255,0.6)" }}>
+                            Loading latest belts...
                         </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero6-text-2" data-start="0.15" data-end="0.28">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Hardware</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                SIGNATURE <span className="hero-title-stroke">BUCKLE</span>
-                            </h2>
-                            <p className="hero-desc">Gleaming hardware crafted with precision, featuring the iconic L.V initials.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero6-text-3" data-start="0.30" data-end="0.45">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Materials</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                TAURILLON <span className="hero-title-stroke">LEATHER</span>
-                            </h2>
-                            <p className="hero-desc">Sumptuous full-grain leather with a distinctive natural grain texture.</p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-top-right" id="hero6-text-4" data-start="0.47" data-end="0.58">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Versatility</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                REVERSIBLE <span className="hero-title-stroke">DESIGN</span>
-                            </h2>
-                            <p className="hero-desc">Two styles in one. Monogram canvas on one side, smooth calf leather on the other.
-                            </p>
-                        </div>
-
-                        <div className="hero-text-overlay pos-bottom-left" id="hero6-text-5" data-start="0.60" data-end="0.72">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Width</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                40MM <span className="hero-title-stroke">PROFILE</span>
-                            </h2>
-                            <p className="hero-desc">The classic 40mm width — bold enough to make a statement, versatile enough for any
-                                loop.</p>
-                        </div>
-
-                        <div className="hero-text-overlay text-last" id="hero6-text-6">
-                            <div className="hero-accent-line">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">The Edit</span>
-                            </div>
-                            <h2 className="hero-title-bold hero-title-md">
-                                COMPLETE YOUR <span className="hero-title-stroke">LOOK</span>
-                            </h2>
-                            <p className="hero-desc">The definitive accessory for the modern wardrobe.</p>
-                            <Link href="/belts" className="hero-cta-pill">Explore Belts</Link>
-                        </div>
-
-                        {/*  SLIDE COUNTER  */}
-                        <div className="hero-counter">
-                            <span className="counter-current">01</span>
-                            <div className="counter-divider"></div>
-                            <span className="counter-total">06</span>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            </section>
-
-            {/*  ============================================================  */}
-            {/*  3. SIGNATURE BELTS — LATEST ARRIVALS UNDER HERO 6             */}
-            {/*  ============================================================  */}
-            <section id="belts-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
-                <div className="container">
-                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
-                        <div className="spotlight-header-left">
-                            <div className="accent-line-row">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Maison Ceinturerie</span>
-                            </div>
-                            <h2 className="spotlight-title">
-                                <span className="spotlight-title-main">Signature</span>
-                                <span className="spotlight-title-italic">Belts.</span>
-                            </h2>
-                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                                Reversible calfskin leather belts with polished gold and silver tone hardware.
-                            </p>
-                        </div>
-                        <Link href="/belts" className="shop-drop-link" id="belts-explore-btn">
-                            <span>Explore All Belts</span>
-                            <div className="shop-drop-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
-                    </div>
-
-                    <div className="luxury-product-grid-v2">
-                        {isLoading ? (
-                            <ProductGridSkeleton count={6} />
-                        ) : categoriesData?.belts && categoriesData.belts.length > 0 ? (
-                            categoriesData.belts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))
-                        ) : (
-                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
-                                Loading latest belts...
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
-
+            </div>
+        </section>
             {/*  ============================================================  */}
             {/*  HERO 5 — LUXURY STOLES SCROLL ANIMATION                       */}
             {/*  ============================================================  */}
             <section id="hero5" className="hero-section">
-                <div className="pt-6 pb-6 z-10 relative flex flex-col items-center text-center">
+                <div className="pt-3 pb-3 z-10 relative flex flex-col items-center text-center">
                     <div className="hero-accent-line reveal-element justify-center mb-4">
                         <span className="accent-label">Explore Category</span>
                     </div>
@@ -581,108 +573,107 @@ export default function Home() {
                 </div>
             </section>
 
-            {/*  ============================================================  */}
-            {/*  4. HAUTE STOLES — LATEST ARRIVALS UNDER HERO 5                */}
-            {/*  ============================================================  */}
-            <section id="stoles-section" className="section" style={{ padding: "4rem 0 5rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
-                <div className="container">
-                    <div className="spotlight-header reveal-element" style={{ marginBottom: "2.5rem" }}>
-                        <div className="spotlight-header-left">
-                            <div className="accent-line-row">
-                                <div className="accent-bar"></div>
-                                <span className="accent-label">Maison Étole</span>
-                            </div>
-                            <h2 className="spotlight-title">
-                                <span className="spotlight-title-main">Haute</span>
-                                <span className="spotlight-title-italic">Stoles.</span>
-                            </h2>
-                            <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.9rem", marginTop: "0.5rem" }}>
-                                A delicate blend of pure cashmere and fine silk jacquards woven on artisanal looms.
-                            </p>
+          {/* ============================================================ */}
+        {/*  4. HAUTE STOLES — LATEST ARRIVALS UNDER HERO 5             */}
+        {/* ============================================================ */}
+        <section id="stoles-section" className="section" style={{ padding: "1.5rem 0 1rem 0", background: "linear-gradient(180deg, rgba(8,8,8,0) 0%, rgba(14,14,14,0.6) 50%, rgba(8,8,8,0) 100%)" }}>
+            <div className="container">
+                <div className="spotlight-header reveal-element" style={{ marginBottom: "1rem" }}>
+                    <div className="spotlight-header-left">
+                        <div className="accent-line-row" style={{ marginBottom: "0.25rem" }}>
+                            <div className="accent-bar"></div>
+                            <span className="accent-label">Maison Étole</span>
                         </div>
-                        <Link href="/stoles" className="shop-drop-link" id="stoles-explore-btn">
-                            <span>Explore All Stoles</span>
-                            <div className="shop-drop-arrow">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M5 12h14M12 5l7 7-7 7" />
-                                </svg>
-                            </div>
-                        </Link>
+                        <h2 className="spotlight-title">
+                            <span className="spotlight-title-main">Haute Stoles.</span>
+                        </h2>
+                        <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.85rem", marginTop: "0.25rem" }}>
+                            A delicate blend of pure cashmere and fine silk jacquards woven on artisanal looms.
+                        </p>
                     </div>
+                    <Link href="/stoles" className="shop-drop-link" id="stoles-explore-btn">
+                        <span>Explore All Stoles</span>
+                        <div className="shop-drop-arrow">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M5 12h14M12 5l7 7-7 7" />
+                            </svg>
+                        </div>
+                    </Link>
+                </div>
 
-                    <div className="luxury-product-grid-v2">
-                        {isLoading ? (
-                            <ProductGridSkeleton count={6} />
-                        ) : categoriesData?.stoles && categoriesData.stoles.length > 0 ? (
-                            categoriesData.stoles.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))
-                        ) : (
-                            <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "3rem 0", color: "rgba(255,255,255,0.6)" }}>
-                                Loading latest stoles...
+                <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
+                    {isLoading ? (
+                        <ProductGridSkeleton count={8} />
+                    ) : categoriesData?.stoles && categoriesData.stoles.length > 0 ? (
+                        categoriesData.stoles.slice(0, 8).map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                        ))
+                    ) : (
+                        <div style={{ textAlign: "center", gridColumn: "1 / -1", padding: "2rem 0", color: "rgba(255,255,255,0.6)" }}>
+                            Loading latest stoles...
+                        </div>
+                    )}
+                </div>
+            </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/*  4. QUALITY FIRST — Middle Section with 3 Category Cards      */}
+        {/* ============================================================ */}
+        <section id="craftsmanship" className="section section-quality" style={{ padding: "1.5rem 0 2rem 0" }}>
+            <div className="container">
+                <div className="section-header-center reveal-element" style={{ marginBottom: "1.5rem" }}>
+                    <span className="section-eyebrow-gold">Quality First</span>
+                    <h2 className="section-title-serif" style={{ marginBottom: "0.25rem" }}>Elevated Style, Made Effortless<br />& Affordable</h2>
+                    <p className="section-subtitle">Carefully selected pieces made to fit seamlessly into modern life.</p>
+                </div>
+
+                <div className="quality-grid" id="quality-grid-container">
+                    <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-1">
+                        <div className="quality-card-image">
+                            <img src="handbag.webp" alt="Lady D!OR White Lace" loading="lazy"
+                                className="floating-img float-v1 delay-2" />
+                            <div className="quality-card-gradient"></div>
+                            <div className="quality-card-label">
+                                <h3>Apparel</h3>
                             </div>
-                        )}
+                        </div>
+                        <div className="quality-card-text">
+                            <p>Timeless wardrobe staples crafted from the finest materials.</p>
+                        </div>
+                        <div className="impact-crack"></div>
+                    </div>
+                    <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-2">
+                        <div className="quality-card-image">
+                            <img src="shoe 6.webp" alt="FERR@GAMO Leather Loafers" loading="lazy"
+                                className="floating-img float-breathe delay-1" />
+                            <div className="quality-card-gradient"></div>
+                            <div className="quality-card-label">
+                                <h3>Accessories</h3>
+                            </div>
+                        </div>
+                        <div className="quality-card-text">
+                            <p>Handcrafted leather accents with premium gold-tone hardware.</p>
+                        </div>
+                        <div className="impact-crack"></div>
+                    </div>
+                    <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-3">
+                        <div className="quality-card-image">
+                            <img src="belt 6.jpg" alt="Vers@ce Medusa Belt" loading="lazy"
+                                className="floating-img float-diag delay-4" />
+                            <div className="quality-card-gradient"></div>
+                            <div className="quality-card-label">
+                                <h3>Signature Accents</h3>
+                            </div>
+                        </div>
+                        <div className="quality-card-text">
+                            <p>Handcrafted Italian leather accents with sculpted gold-tone hardware.</p>
+                        </div>
+                        <div className="impact-crack"></div>
                     </div>
                 </div>
-            </section>
-
-            {/*  ============================================================  */}
-            {/*  4. QUALITY FIRST — Middle Section with 3 Category Cards       */}
-            {/*  ============================================================  */}
-            <section id="craftsmanship" className="section section-quality">
-                <div className="container">
-                    <div className="section-header-center reveal-element">
-                        <span className="section-eyebrow-gold">Quality First</span>
-                        <h2 className="section-title-serif">Elevated Style, Made Effortless<br />& Affordable</h2>
-                        <p className="section-subtitle">Carefully selected pieces made to fit seamlessly into modern life.</p>
-                    </div>
-
-                    <div className="quality-grid" id="quality-grid-container">
-                        <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-1">
-                            <div className="quality-card-image">
-                                <img src="handbag.webp" alt="Lady D!OR White Lace" loading="lazy"
-                                    className="floating-img float-v1 delay-2" />
-                                <div className="quality-card-gradient"></div>
-                                <div className="quality-card-label">
-                                    <h3>Apparel</h3>
-                                </div>
-                            </div>
-                            <div className="quality-card-text">
-                                <p>Timeless wardrobe staples crafted from the finest materials.</p>
-                            </div>
-                            <div className="impact-crack"></div>
-                        </div>
-                        <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-2">
-                            <div className="quality-card-image">
-                                <img src="shoe 6.webp" alt="FERR@GAMO Leather Loafers" loading="lazy"
-                                    className="floating-img float-breathe delay-1" />
-                                <div className="quality-card-gradient"></div>
-                                <div className="quality-card-label">
-                                    <h3>Accessories</h3>
-                                </div>
-                            </div>
-                            <div className="quality-card-text">
-                                <p>Handcrafted leather accents with premium gold-tone hardware.</p>
-                            </div>
-                            <div className="impact-crack"></div>
-                        </div>
-                        <div className="quality-card hover-float-parent quality-anim-card" id="quality-card-3">
-                            <div className="quality-card-image">
-                                <img src="belt 6.jpg" alt="Vers@ce Medusa Belt" loading="lazy"
-                                    className="floating-img float-diag delay-4" />
-                                <div className="quality-card-gradient"></div>
-                                <div className="quality-card-label">
-                                    <h3>Signature Accents</h3>
-                                </div>
-                            </div>
-                            <div className="quality-card-text">
-                                <p>Handcrafted Italian leather accents with sculpted gold-tone hardware.</p>
-                            </div>
-                            <div className="impact-crack"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            </div>
+        </section>
 
             {/*  ============================================================  */}
             {/*  5. WORLD'S MOST LOVED (ARC GALLERY)                           */}

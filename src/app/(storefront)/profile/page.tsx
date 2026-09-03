@@ -7,8 +7,6 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { formatINR } from "@/lib/fetchProducts";
 
-const WHATSAPP_NUMBER = "919820099401";
-
 export default function ProfilePage() {
   const router = useRouter();
   const { user, customer, isAuthenticated, isLoading, logout, wishlist, addToCart } = useAuth();
@@ -296,11 +294,6 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     orders.map((ord) => {
-                      const waOrderMsg = encodeURIComponent(
-                        `Hi RAKVIH Concierge, inquiring on the status of my order #${ord.id || ord.payment_id} for ${formatINR(ord.grand_total)}.`
-                      );
-                      const waOrderUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${waOrderMsg}`;
-
                       return (
                         <div key={ord.id} className="auth-card-wrap" style={{ padding: "1.75rem" }}>
                           {/* Order Header */}
@@ -369,30 +362,13 @@ export default function ProfilePage() {
                             </div>
                           )}
 
-                          {/* Delivery Address Snippet & WhatsApp Tracking */}
+                          {/* Delivery Address Snippet */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", paddingTop: "1rem" }}>
                             <div style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.5)" }}>
                               <span>Delivered to: </span>
                               <strong style={{ color: "#ffffff" }}>{ord.house_number}, {ord.street}, {ord.city}</strong>
                             </div>
 
-                            <a
-                              href={waOrderUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: "#25D366",
-                                fontFamily: "var(--font-heading)",
-                                fontSize: "0.75rem",
-                                fontWeight: 700,
-                                textDecoration: "none",
-                                display: "inline-flex",
-                                alignItems: "center",
-                                gap: "4px",
-                              }}
-                            >
-                              Track on WhatsApp Concierge →
-                            </a>
                           </div>
                         </div>
                       );
@@ -443,7 +419,7 @@ export default function ProfilePage() {
 
                     <div>
                       <label style={{ display: "block", fontSize: "0.72rem", fontFamily: "var(--font-heading)", letterSpacing: "0.15em", textTransform: "uppercase", color: "var(--color-gold)", marginBottom: "0.4rem", fontWeight: 700 }}>
-                        Primary WhatsApp Phone Number
+                        Primary Phone Number
                       </label>
                       <input
                         type="tel"

@@ -234,7 +234,7 @@ export default function CollectionHubPage() {
               )}
             </div>
 
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
+            <div className="storefront-filter-row" style={{ display: "flex", gap: "10px", flexWrap: "wrap", alignItems: "center" }}>
               {/* Search Bar */}
               <input
                 type="text"
