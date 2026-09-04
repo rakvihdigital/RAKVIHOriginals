@@ -3,32 +3,60 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gem, Lock, Mail, ArrowRight, ShieldCheck, UserCheck } from "lucide-react";
+import { Gem, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("admin@rakvihoriginals.com");
-  const [password, setPassword] = useState("••••••••••••");
-  const [role, setRole] = useState<"admin" | "subadmin">("admin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     setLoading(true);
-    localStorage.setItem("rakvih_admin_role", role);
-    setTimeout(() => {
-      router.push("/admin/dashboard");
-    }, 600);
-  };
 
-  const handleDemoFill = (selectedRole: "admin" | "subadmin") => {
-    setRole(selectedRole);
-    if (selectedRole === "admin") {
-      setEmail("admin@rakvihoriginals.com");
-      setPassword("MaisonSupreme2026");
-    } else {
-      setEmail("pos.terminal@rakvihoriginals.com");
-      setPassword("SubAdminVault2026");
+    const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
+
+    try {
+      // 1. Dispatch authentication check to the server-side bcrypt route
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: cleanEmail,
+          password: cleanPassword,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Invalid credentials or unauthorized portal access.");
+      }
+
+      // 2. Persist session, role, and granular route access
+      const assignedRole = data.user?.role?.toLowerCase() === "admin" ? "admin" : "subadmin";
+      localStorage.setItem("rakvih_admin_role", assignedRole);
+      localStorage.setItem("rakvih_admin_email", data.user?.email || cleanEmail);
+      localStorage.setItem("rakvih_admin_id", data.user?.id || "");
+
+      // Ensure routes are stored for sidebar filtering
+      const permittedRoutes =
+        data.user?.allowed_routes && data.user.allowed_routes.length > 0
+          ? data.user.allowed_routes
+          : ["/admin/dashboard"];
+      localStorage.setItem("rakvih_admin_routes", JSON.stringify(permittedRoutes));
+
+      // 3. Redirect to Admin Dashboard
+      router.push("/admin/dashboard");
+    } catch (err: any) {
+      setErrorMessage(err.message || "Authentication failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,28 +78,25 @@ export default function AdminLoginPage() {
 
         {/* Login Card */}
         <div className="login-card">
-          {/* Top subtle highlight */}
           <div className="login-card-highlight" />
 
-          {/* Role selector tabs */}
-          <div className="login-role-tabs">
-            <button
-              type="button"
-              onClick={() => handleDemoFill("admin")}
-              className={`login-role-tab${role === "admin" ? " active" : ""}`}
+          {/* Error Message banner */}
+          {errorMessage && (
+            <div
+              style={{
+                background: "rgba(239, 68, 68, 0.15)",
+                border: "1px solid rgba(239, 68, 68, 0.3)",
+                color: "#fca5a5",
+                padding: "0.75rem 1rem",
+                borderRadius: "10px",
+                fontSize: "0.85rem",
+                marginBottom: "1.25rem",
+                textAlign: "center",
+              }}
             >
-              <ShieldCheck size={14} />
-              <span>Super Admin</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoFill("subadmin")}
-              className={`login-role-tab${role === "subadmin" ? " active" : ""}`}
-            >
-              <UserCheck size={14} />
-              <span>Sub-Admin</span>
-            </button>
-          </div>
+              {errorMessage}
+            </div>
+          )}
 
           <form onSubmit={handleLogin} className="login-form">
             <div>
@@ -86,7 +111,8 @@ export default function AdminLoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="login-input"
-                  placeholder="name@rakvihoriginals.com"
+                  placeholder="name@domain.com"
+                  autoComplete="email"
                 />
               </div>
             </div>
@@ -94,18 +120,43 @@ export default function AdminLoginPage() {
             <div>
               <div className="login-field-head">
                 <label className="login-field-label">Security Passcode</label>
-                <span className="login-reset-link">Reset Key?</span>
               </div>
-              <div className="login-input-wrap">
+              <div className="login-input-wrap" style={{ position: "relative" }}>
                 <Lock size={16} className="login-input-icon" />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="login-input"
-                  placeholder="••••••••••••"
+                  placeholder="Enter your security passcode"
+                  autoComplete="current-password"
+                  style={{ paddingRight: "2.5rem" }}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  style={{
+                    position: "absolute",
+                    right: "0.75rem",
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: "0.25rem",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "rgba(255, 255, 255, 0.5)",
+                    transition: "color 0.2s ease",
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = "#d4af37")}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = "rgba(255, 255, 255, 0.5)")}
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
               </div>
             </div>
 
@@ -124,19 +175,6 @@ export default function AdminLoginPage() {
               )}
             </button>
           </form>
-
-          {/* Quick Demo Access hint */}
-          <div className="login-demo-hint">
-            <p>Instant Demo Access for Inspection:</p>
-            <div className="login-demo-buttons">
-              <button onClick={() => handleDemoFill("admin")} className="login-demo-btn">
-                Auto-fill Admin
-              </button>
-              <button onClick={() => handleDemoFill("subadmin")} className="login-demo-btn">
-                Auto-fill Sub-Admin
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Back to Boutique */}

@@ -16,6 +16,35 @@ type Brand = {
 const LIKED_BRANDS_KEY = "liked_brands_v1";
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
+// Clean and validate image URLs (filters out raw video formats and parses JSON arrays)
+function cleanImageUrl(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  let value: unknown = raw;
+
+  try {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+      const parsed = JSON.parse(trimmed);
+      value = Array.isArray(parsed) ? parsed[0] : parsed;
+    }
+  } catch {
+    // not JSON — treat as plain string
+  }
+
+  let clean = String(value ?? "")
+    .split(",")[0]
+    .replace(/[\[\]"'\\]/g, "")
+    .trim();
+
+  if (!clean) return null;
+  if (clean.startsWith("http:")) clean = clean.replace(/^http:/i, "https:");
+  
+  // Reject videos completely
+  if (/\.(mp4|webm|ogg|mov)$/i.test(clean)) return null;
+
+  return clean;
+}
+
 function readLikedBrands(): number[] {
   if (typeof window === "undefined") return [];
   try {
@@ -258,6 +287,8 @@ export default function ListBrandsPage() {
                 <div className="brand-directory-grid">
                   {letterBrands.map((brand) => {
                     const liked = likedIds.includes(brand.id);
+                    const validImg = cleanImageUrl(brand.image_url);
+
                     return (
                       <div key={brand.id} className="brand-directory-card">
                         <button
@@ -281,13 +312,25 @@ export default function ListBrandsPage() {
                           </svg>
                         </button>
 
-                        <div className="brand-directory-card-image">
-                          {brand.image_url ? (
+                        <div
+                          className="brand-directory-card-image"
+                          style={{
+                            position: "relative",
+                            overflow: "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "0.75rem",
+                          }}
+                        >
+                          {validImg ? (
                             <Image
-                              src={brand.image_url}
+                              src={validImg}
                               alt={brand.alt_text || brand.name_en}
                               fill
                               sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 22vw"
+                              style={{ objectFit: "contain", padding: "8px" }}
+                              unoptimized={validImg.startsWith("http:")}
                             />
                           ) : (
                             <span className="brand-directory-card-fallback">

@@ -142,10 +142,8 @@ function wishlistKey(userId: string) {
    HELPERS
 ===================================================== */
 
-/** Never let a password hash sit in React state longer than it has to. */
-function stripPassword<T extends { password?: unknown }>(
-  row: T
-): Omit<T, "password"> {
+function stripPassword(row: any): any {
+  if (!row) return row;
   const { password, ...rest } = row;
   return rest;
 }

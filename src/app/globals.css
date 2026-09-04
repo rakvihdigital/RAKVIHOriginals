@@ -6375,6 +6375,9 @@ ul {
     padding: 1.5rem;
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
     transition: background-color 0.2s ease, border-color 0.2s ease;
+    display: block;
+    text-decoration: none;
+    color: inherit;
 }
 
 .dash-kpi-card:hover {
@@ -7656,6 +7659,364 @@ ul {
         transform: translateX(0);
     }
 }
+/* ============================================
+   BRAND DIRECTORY — COMPONENT STYLES
+   ============================================ */
+
+/* — Toolbar (search + liked filter row) — */
+.brand-directory-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem;
+    flex-wrap: wrap;
+    margin-bottom: 2rem;
+}
+
+.brand-directory-search {
+    position: relative;
+    width: 320px;
+    max-width: 100%;
+}
+
+.brand-directory-search input {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 0.7rem 2.6rem 0.7rem 1.2rem;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    color: #f5f0eb;
+    outline: none;
+    transition: border-color 0.25s ease;
+}
+
+.brand-directory-search input::placeholder {
+    color: rgba(245, 240, 235, 0.3);
+}
+
+.brand-directory-search input:focus {
+    border-color: var(--color-gold);
+}
+
+.brand-directory-search svg {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 15px;
+    height: 15px;
+    color: rgba(245, 240, 235, 0.3);
+    pointer-events: none;
+}
+
+/* — Liked pill badge — */
+.brand-directory-liked-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #e8a0b4;
+    background: rgba(232, 160, 180, 0.08);
+    border: 1px solid rgba(232, 160, 180, 0.2);
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+}
+
+.brand-directory-liked-pill svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+}
+
+/* — A–Z alpha rail — */
+.brand-directory-alpha-rail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    margin-bottom: 2.5rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brand-directory-alpha-btn {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 6px;
+    font-family: var(--font-heading);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.brand-directory-alpha-btn.available:hover {
+    background: rgba(196, 161, 116, 0.12);
+    color: var(--color-gold);
+}
+
+.brand-directory-alpha-btn.active {
+    background: var(--color-gold);
+    color: #0a0a0a;
+}
+
+.brand-directory-alpha-btn.disabled {
+    color: rgba(255, 255, 255, 0.12);
+    cursor: default;
+    pointer-events: none;
+}
+
+/* — Section heading (letter + line + count) — */
+.brand-directory-section {
+    margin-bottom: 2.5rem;
+}
+
+.brand-directory-section-heading {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.brand-directory-section-letter {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.brand-directory-section-line {
+    flex: 1;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.brand-directory-section-count {
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.3);
+    flex-shrink: 0;
+}
+
+/* — Card grid — */
+.brand-directory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+}
+
+@media (min-width: 768px) {
+    .brand-directory-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+}
+
+/* — Individual brand card — */
+.brand-directory-card {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.brand-directory-card:hover {
+    border-color: rgba(196, 161, 116, 0.25);
+    background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* — Card image area — */
+.brand-directory-card-image {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: rgba(255, 255, 255, 0.02);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+/* — Fallback text when no image — */
+.brand-directory-card-fallback {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+    word-break: break-word;
+    padding: 0.5rem;
+}
+
+/* — Card name label — */
+.brand-directory-card-name {
+    padding: 0.75rem 0.85rem;
+    font-family: var(--font-heading);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.85);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* — Like button — */
+.brand-directory-like-btn {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 5;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    color: rgba(255, 255, 255, 0.5);
+    padding: 0;
+}
+
+.brand-directory-like-btn svg {
+    width: 14px;
+    height: 14px;
+}
+
+.brand-directory-like-btn:hover {
+    color: #e8a0b4;
+    border-color: rgba(232, 160, 180, 0.3);
+    background: rgba(232, 160, 180, 0.1);
+}
+
+.brand-directory-like-btn.liked {
+    color: #e8a0b4;
+    background: rgba(232, 160, 180, 0.15);
+    border-color: rgba(232, 160, 180, 0.3);
+}
+
+/* — Skeleton loading — */
+.brand-directory-skeleton {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    aspect-ratio: 4 / 4;
+    animation: brand-skeleton-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes brand-skeleton-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+}
+
+/* — Empty state — */
+.brand-directory-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.brand-directory-empty p {
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 1rem;
+}
+
+.brand-directory-clear-btn {
+    font-family: var(--font-heading);
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+    background: rgba(196, 161, 116, 0.08);
+    border: 1px solid rgba(196, 161, 116, 0.3);
+    border-radius: 999px;
+    padding: 0.55rem 1.2rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.brand-directory-clear-btn:hover {
+    background: var(--color-gold);
+    color: #0a0a0a;
+}
+
+/* — Mobile responsive adjustments — */
+@media (max-width: 640px) {
+    .brand-directory-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+    }
+
+    .brand-directory-search {
+        width: 100%;
+    }
+
+    .brand-directory-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .brand-directory-alpha-rail {
+        gap: 0.15rem;
+    }
+
+    .brand-directory-alpha-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.6rem;
+    }
+
+    .brand-directory-section-letter {
+        font-size: 1.5rem;
+    }
+
+    .brand-directory-card-name {
+        font-size: 0.65rem;
+        padding: 0.6rem 0.5rem;
+    }
+}
+
 /* ============================================
    BRAND DIRECTORY — ADMIN CONTEXT OVERRIDE
    Tightens vertical rhythm when this page is

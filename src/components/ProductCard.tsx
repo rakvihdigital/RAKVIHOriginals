@@ -18,7 +18,14 @@ export function ProductCard({ product }: ProductCardProps) {
   const rawVariants = product.variants || [];
   const variants: ProductVariant[] = rawVariants.length > 0
     ? rawVariants
-    : [{ id: `std-${product.id}`, sizeName: "Standard", displayPrice: product.price, isSale: product.isSale }];
+    : [{
+        id: typeof product.id === "number" ? product.id : 0,
+        sizeName: "Standard",
+        displayPrice: product.price,
+        price: product.priceValue || 0,
+        stock: 1,
+        isSale: product.isSale,
+      }];
   const [selectedVariant, setSelectedVariant] = useState<ProductVariant>(variants[0]);
   const isWishlisted = isInWishlist(product.id);
   const activePrice = selectedVariant.displayPrice;

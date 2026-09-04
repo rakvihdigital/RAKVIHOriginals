@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   ShoppingCart,
   Users,
@@ -37,7 +37,21 @@ interface SidebarProps {
 
 export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [openMenu, setOpenMenu] = useState<string | null>(null);
+  const [allowedRoutes, setAllowedRoutes] = useState<string[]>([]);
+
+  // Load allowed routes from session
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("rakvih_admin_routes");
+      if (stored) {
+        setAllowedRoutes(JSON.parse(stored));
+      }
+    } catch {
+      setAllowedRoutes([]);
+    }
+  }, []);
 
   const menu: MenuItem[] = [
     { 
@@ -77,9 +91,44 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
     },
   ];
 
-  // Role-based permission filtering: Subadmins cannot see or access the ADMINS management section
-  const filteredMenu =
-    role === "subadmin" ? menu.filter((m) => m.label !== "ADMINS") : menu;
+  // Dynamic filtering:
+  // 1. Admin gets all items
+  // 2. Subadmin only sees items present in allowedRoutes (and never sees ADMINS)
+  const filteredMenu = menu.filter((item) => {
+    if (role === "admin") return true;
+
+    // Subadmins never get access to ADMINS creation
+    if (item.label === "ADMINS") return false;
+
+    // Check if subadmin has permission for this item's href
+    if (item.href) {
+      return allowedRoutes.includes(item.href);
+    }
+
+    // Check if subadmin has permission for any sub-items
+    if (item.subMenu) {
+      return item.subMenu.some((sub) => allowedRoutes.includes(sub.href));
+    }
+
+    return false;
+  });
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+
+    // 1. Purge all admin session data
+    localStorage.removeItem("rakvih_admin_role");
+    localStorage.removeItem("rakvih_admin_email");
+    localStorage.removeItem("rakvih_admin_id");
+    localStorage.removeItem("rakvih_admin_routes");
+    sessionStorage.clear();
+
+    if (onCloseMobile) onCloseMobile();
+
+    // 2. Hard redirect to the Admin Login portal (not public store login)
+    // If your route is `/admin/login`, change the string below accordingly
+    window.location.href = "/admin-login";
+  };
 
   return (
     <>
@@ -149,19 +198,23 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
 
                       <div className={`exec-submenu ${isOpen ? "open" : ""}`}>
                         <div className="exec-submenu-track">
-                          {item.subMenu.map((sub) => {
-                            const subActive = pathname === sub.href;
-                            return (
-                              <Link
-                                key={sub.href}
-                                href={sub.href}
-                                onClick={onCloseMobile}
-                                className={`exec-submenu-link ${subActive ? "active" : ""}`}
-                              >
-                                {sub.label}
-                              </Link>
-                            );
-                          })}
+                          {item.subMenu
+                            .filter((sub) =>
+                              role === "admin" ? true : allowedRoutes.includes(sub.href)
+                            )
+                            .map((sub) => {
+                              const subActive = pathname === sub.href;
+                              return (
+                                <Link
+                                  key={sub.href}
+                                  href={sub.href}
+                                  onClick={onCloseMobile}
+                                  className={`exec-submenu-link ${subActive ? "active" : ""}`}
+                                >
+                                  {sub.label}
+                                </Link>
+                              );
+                            })}
                         </div>
                       </div>
                     </>
@@ -183,12 +236,26 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
           </div>
         </nav>
 
-        {/* Footer */}
+        {/* Footer with Dedicated Logout Action */}
         <div className="exec-sidebar-footer">
-          <Link href="/login" className="exec-end-session-btn">
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="exec-end-session-btn"
+            style={{
+              width: "100%",
+              display: "flex",
+              alignItems: "center",
+              gap: "0.6rem",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
             <LogOut size={14} strokeWidth={2} />
-            End Session
-          </Link>
+            <span>End Session</span>
+          </button>
         </div>
       </aside>
     </>

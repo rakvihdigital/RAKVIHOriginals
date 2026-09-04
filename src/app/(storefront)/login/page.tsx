@@ -10,7 +10,7 @@ function LoginFormContent() {
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get("redirect") || "/";
 
-  const { login, register, isAuthenticated, user, logout } = useAuth();
+  const { login, register, isAuthenticated, user, customer, logout } = useAuth();
 
   const [activeTab, setActiveTab] = useState<"signin" | "signup">("signin");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -78,7 +78,7 @@ function LoginFormContent() {
           VIP Member Authenticated
         </span>
         <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "#ffffff", marginBottom: "0.5rem" }}>
-          Welcome back, {user.user_metadata?.full_name || user.email}
+          Welcome back, {customer?.name || user?.email?.split("@")[0] || "VIP Member"}
         </h2>
         <p style={{ color: "rgba(255, 255, 255, 0.6)", marginBottom: "2rem" }}>
           You have full access to your saved wishlist, private salon appointments, and shopping bag.
@@ -119,10 +119,12 @@ function LoginFormContent() {
     <div className="auth-card-wrap">
       {/* Brand Header */}
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <span className="brand-gold-badge" style={{ marginBottom: "0.75rem" }}>
-          Maison Privé Access
-        </span>
-        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2.2rem", color: "#ffffff", marginBottom: "0.5rem" }}>
+        <div style={{ marginBottom: "1rem" }}>
+          <span className="brand-text-layer" style={{ fontSize: "1.8rem" }}>
+            RAKVIH <span className="brand-sub-gold" style={{ fontSize: "0.85rem", marginLeft: "4px" }}>ORIGINALS</span>
+          </span>
+        </div>
+        <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.8rem", color: "#ffffff", marginBottom: "0.5rem" }}>
           {activeTab === "signin" ? "Sign In To Your Vault" : "Create VIP Membership"}
         </h1>
         <p style={{ color: "rgba(255, 255, 255, 0.6)", fontSize: "0.88rem" }}>

@@ -116,7 +116,7 @@ export default function ProfilePage() {
     }
   };
 
-  const displayName = customer?.name || user?.user_metadata?.full_name || user?.email?.split("@")[0] || "VIP Member";
+  const displayName = customer?.name || user?.email?.split("@")[0] || "VIP Member";
 
   return (
     <main className="subpage-wrapper">

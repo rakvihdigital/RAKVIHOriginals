@@ -26,7 +26,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     // while the content scrolls under it — that's exactly what your
     // screenshots show.
     <div
-      className="relative min-h-screen w-full overflow-x-hidden bg-[#13102b] text-white"
+      className="relative min-h-screen w-full overflow-x-hidden bg-[#0a0a0a] text-white"
       style={{ fontFamily: "var(--font-body)" }}
     >
       {/* Sidebar Component with Role and Mobile Drawer State */}
@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="exec-admin-main flex flex-col min-h-screen min-w-0">
 
         {/* Mobile Header Bar (Visible on mobile/tablet to toggle the drawer) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-[#13102b]/90 backdrop-blur-md border-b border-white/10 lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/10 lg:hidden">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
