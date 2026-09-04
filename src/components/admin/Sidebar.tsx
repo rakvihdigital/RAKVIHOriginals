@@ -10,7 +10,9 @@ import {
   Lock,
   LogOut,
   LayoutDashboard,
-  CheckCircle,
+  Tag,
+  Layers,
+  Package,
   X,
   ChevronRight,
 } from "lucide-react";
@@ -38,18 +40,44 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
   const [openMenu, setOpenMenu] = useState<string | null>(null);
 
   const menu: MenuItem[] = [
-    { label: "OVERVIEW", href: "/admin/dashboard", icon: <LayoutDashboard size={16} strokeWidth={1.5} /> },
-    { label: "List Brands", href: "/admin/listbrands", icon: <CheckCircle size={16} strokeWidth={1.5} /> },
-    { label: "Category", href: "/admin/categorysetup", icon: <CheckCircle size={16} strokeWidth={1.5} /> },
-    { label: "PRODUCTS", href: "/admin/products", icon: <CheckCircle size={16} strokeWidth={1.5} /> },
-    { label: "ORDERS", href: "/admin/orderupdate", icon: <ShoppingCart size={16} strokeWidth={1.5} /> },
-    { label: "ADMINS", href: "/admin/createsub", icon: <Lock size={16} strokeWidth={1.5} /> },
-    { label: "USERS", href: "/customer", icon: <Users size={16} strokeWidth={1.5} /> },
+    { 
+      label: "OVERVIEW", 
+      href: "/admin/dashboard", 
+      icon: <LayoutDashboard size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "List Brands", 
+      href: "/admin/listbrands", 
+      icon: <Tag size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "Category", 
+      href: "/admin/categorysetup", 
+      icon: <Layers size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "PRODUCTS", 
+      href: "/admin/products", 
+      icon: <Package size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "ORDERS", 
+      href: "/admin/orders", 
+      icon: <ShoppingCart size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "ADMINS", 
+      href: "/admin/createsub", 
+      icon: <Lock size={16} strokeWidth={1.5} /> 
+    },
+    { 
+      label: "USERS", 
+      href: "/admin/users", 
+      icon: <Users size={16} strokeWidth={1.5} /> 
+    },
   ];
 
-  // Subadmins see everything except the ADMINS section (creating/managing
-  // other admins is an owner-only action). Adjust this list if subadmin
-  // access should be narrower or wider.
+  // Role-based permission filtering: Subadmins cannot see or access the ADMINS management section
   const filteredMenu =
     role === "subadmin" ? menu.filter((m) => m.label !== "ADMINS") : menu;
 
@@ -69,7 +97,7 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
         {/* Header */}
         <div className="exec-sidebar-header">
           <div className="flex items-start justify-between">
-            <Link href="/dashboard" className="exec-sidebar-badge">
+            <Link href="/admin/dashboard" className="exec-sidebar-badge">
               <span className="exec-sidebar-badge-main">RAKVIH</span>
               <span className="exec-sidebar-badge-sub">ORIGINALS</span>
             </Link>
@@ -83,7 +111,9 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
             <span className="exec-sidebar-portal-icon">
               <Shield size={11} strokeWidth={2} />
             </span>
-            <span className="exec-sidebar-portal-label">Executive Portal</span>
+            <span className="exec-sidebar-portal-label">
+              {role === "admin" ? "Executive Portal (Owner)" : "Subadmin Portal"}
+            </span>
           </div>
         </div>
 
@@ -103,6 +133,7 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
                   {item.subMenu ? (
                     <>
                       <button
+                        type="button"
                         onClick={() => setOpenMenu(isOpen ? null : item.label)}
                         className={`exec-nav-item ${isHighlighted ? "active" : ""}`}
                       >

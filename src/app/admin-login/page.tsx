@@ -17,7 +17,7 @@ export default function AdminLoginPage() {
     setLoading(true);
     localStorage.setItem("rakvih_admin_role", role);
     setTimeout(() => {
-      router.push("/dashboard");
+      router.push("/admin/dashboard");
     }, 600);
   };
 
