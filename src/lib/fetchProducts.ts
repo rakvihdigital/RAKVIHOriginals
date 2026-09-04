@@ -425,6 +425,7 @@ export async function fetchProductsBySubcategoryIds(
         )
       `)
       .in("subcategory_id", subcategoryIds)
+      .eq("active", true)
       .order("id", { ascending: false });
 
     const [{ data: dbProducts, error }, brandMap, attrMap] = await Promise.all([
@@ -434,6 +435,9 @@ export async function fetchProductsBySubcategoryIds(
     ]);
 
     if (error || !dbProducts) {
+      if (error) {
+        console.error("Error fetching homepage/category products:", error.message);
+      }
       return [];
     }
 

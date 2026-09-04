@@ -39,6 +39,24 @@ function isRemoteUrl(src: string | null | undefined): boolean {
   return /^https?:\/\//i.test(src);
 }
 
+function getImageSrc(src: string): string {
+  try {
+    const url = new URL(src);
+    const objectPath = "/storage/v1/object/public/";
+    const objectIndex = url.pathname.indexOf(objectPath);
+
+    if (objectIndex === -1) return src;
+
+    url.pathname = `${url.pathname.slice(0, objectIndex)}/storage/v1/render/image/public/${url.pathname.slice(objectIndex + objectPath.length)}`;
+    url.searchParams.set("width", "800");
+    url.searchParams.set("quality", "75");
+    url.searchParams.set("resize", "contain");
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
 export default function OptimizedImage({
   src,
   alt,
@@ -66,6 +84,8 @@ export default function OptimizedImage({
     );
   }
 
+  const imageSrc = isRemoteUrl(src) ? getImageSrc(src) : src;
+
   // Default: skip the Next.js image optimizer for any remote (CDN) URL.
   // Caller can still force optimization by passing unoptimized={false}.
   const shouldSkipOptimizer = unoptimized ?? isRemoteUrl(src);
@@ -76,7 +96,7 @@ export default function OptimizedImage({
         <div className={`absolute inset-0 bg-slate-100 animate-pulse ${fill ? "" : className}`} />
       )}
       <Image
-        src={src}
+        src={imageSrc}
         alt={alt}
         fill={fill}
         width={!fill ? width : undefined}
