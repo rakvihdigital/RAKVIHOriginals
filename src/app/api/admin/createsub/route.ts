@@ -14,14 +14,23 @@ const ALL_PORTAL_PAGES = [
   "/admin/users",
 ];
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Helper function to initialize Supabase at runtime, preventing build-time crashes
+const getSupabase = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey =
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    
+  if (!supabaseUrl || !supabaseKey) {
+    throw new Error("Missing Supabase environment variables");
+  }
+  
+  return createClient(supabaseUrl, supabaseKey);
+};
 
 // 1. GET: Fetch all admins/subadmins
 export async function GET() {
   try {
+    const supabase = getSupabase();
     const { data, error } = await supabase
       .from("rakvih_subadmins")
       .select("id, email, role, allowed_routes, created_at")
@@ -40,6 +49,7 @@ export async function GET() {
 // 2. POST: Create subadmin with specific page permissions
 export async function POST(request: Request) {
   try {
+    const supabase = getSupabase();
     const { email, password, role, allowed_routes } = await request.json();
 
     if (!email || !password) {
@@ -88,6 +98,7 @@ export async function POST(request: Request) {
 // 3. PATCH: Edit role and page access
 export async function PATCH(request: Request) {
   try {
+    const supabase = getSupabase();
     const { id, role, allowed_routes } = await request.json();
 
     if (!id) {
@@ -127,6 +138,7 @@ export async function PATCH(request: Request) {
 // 4. DELETE: Remove subadmin (protects primary owner)
 export async function DELETE(request: Request) {
   try {
+    const supabase = getSupabase();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
