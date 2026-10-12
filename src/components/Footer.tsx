@@ -157,34 +157,31 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Gender & Categories Side by Side */}
-          <div className="footer-col" style={{ display: "flex", gap: "2.5rem", flexWrap: "wrap" }}>
-            {/* Division 1: Gender */}
-            <div>
-              <h4 className="footer-col-title">GENDER</h4>
-              <ul className="footer-links-list">
-                {genderLinks.map((item, idx) => (
-                  <li key={idx}>
-                    <Link href={item.href}>{item.name}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Division 2: Categories (Next to Gender, with 'Collections' name removed) */}
-            <div>
-              <h4 className="footer-col-title">CATEGORIES</h4>
-              <ul className="footer-links-list">
-                {categoryLinks.map((item, idx) => (
-                  <li key={idx}>
-                    <Link href={item.href}>{item.name}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+          {/* Column 3: Gender */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">GENDER</h4>
+            <ul className="footer-links-list">
+              {genderLinks.map((item, idx) => (
+                <li key={idx}>
+                  <Link href={item.href}>{item.name}</Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
-          {/* Column 4: Corporate Office & Atelier Address */}
+          {/* Column 4: Categories */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">CATEGORIES</h4>
+            <ul className="footer-links-list">
+              {categoryLinks.map((item, idx) => (
+                <li key={idx}>
+                  <Link href={item.href}>{item.name}</Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Column 5: Corporate Office & Atelier Address */}
           <div className="footer-col address-col">
             <h4 className="footer-col-title">CORPORATE ATELIER</h4>
             <div style={{ color: "rgba(255, 255, 255, 0.7)", fontSize: "0.82rem", lineHeight: 1.6, display: "flex", flexDirection: "column", gap: "0.75rem" }}>
