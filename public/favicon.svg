@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="gold-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FCE59F"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#AA7C11"/>
+    </linearGradient>
+    <linearGradient id="border-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFE8A3"/>
+      <stop offset="50%" stop-color="#C5A059"/>
+      <stop offset="100%" stop-color="#8C6D23"/>
+    </linearGradient>
+  </defs>
+  <!-- Background disc ensuring high contrast on both light and dark browser tabs -->
+  <circle cx="32" cy="32" r="30" fill="#0E0D0B"/>
+  <circle cx="32" cy="32" r="28.5" fill="none" stroke="url(#border-grad)" stroke-width="2.5"/>
+  <!-- Luxury Serif 'R' -->
+  <text x="32" y="44" 
+        font-family="'Playfair Display', 'Cormorant Garamond', 'Georgia', 'Times New Roman', serif" 
+        font-size="38" 
+        font-weight="700" 
+        text-anchor="middle" 
+        fill="url(#gold-grad)">R</text>
+</svg>

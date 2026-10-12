@@ -36,6 +36,59 @@ export interface InvoiceOrder {
 }
 
 /**
+ * Loads the brand logo as an authentic transparent PNG base64 data URL.
+ * Preserves transparency and wide 8:1 aspect ratio so white/gold letters
+ * stand out vibrantly against the dark header banner in jsPDF.
+ */
+export async function loadLogoAsBase64(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+
+  // 1. Try direct fetch for lossless, uncompressed PNG bytes
+  try {
+    const res = await fetch("/rakvih-logo.png");
+    if (res.ok) {
+      const blob = await res.blob();
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+      if (base64) return base64;
+    }
+  } catch {
+    // continue to canvas fallback
+  }
+
+  // 2. Canvas fallback preserving transparency and natural dimensions
+  return new Promise((resolve) => {
+    try {
+      const img = new window.Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const w = img.naturalWidth || 893;
+          const h = img.naturalHeight || 112;
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/png"));
+        } catch {
+          resolve(null);
+        }
+      };
+      img.onerror = () => resolve(null);
+      img.src = "/rakvih-logo.png";
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/**
  * Safely converts an image URL into a base64 data URL via HTML Canvas.
  * Returns null if network or CORS fails, ensuring PDF generation never crashes.
  */
@@ -92,7 +145,7 @@ export async function downloadOrderInvoice(order: InvoiceOrder): Promise<void> {
 
   // Pre-load images concurrently (brand logo + cart items)
   const [logoBase64, ...itemImages] = await Promise.all([
-    loadImageAsBase64("/rakvih-logo.png"),
+    loadLogoAsBase64(),
     ...order.cart_items.map((it) => (it.image ? loadImageAsBase64(it.image) : Promise.resolve(null))),
   ]);
 
@@ -108,26 +161,26 @@ export async function downloadOrderInvoice(order: InvoiceOrder): Promise<void> {
   // Logo / Brand Title
   if (logoBase64) {
     try {
-      doc.addImage(logoBase64, "PNG", margin, 9, 45, 9);
+      doc.addImage(logoBase64, "PNG", margin, 7.5, 56, 7.5);
     } catch {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(18);
       doc.setTextColor(212, 175, 55);
-      doc.text("RAKVIH ORIGINALS", margin, 18);
+      doc.text("RAKVIH ORIGINALS", margin, 17);
     }
   } else {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(18);
     doc.setTextColor(212, 175, 55);
-    doc.text("RAKVIH ORIGINALS", margin, 18);
+    doc.text("RAKVIH ORIGINALS", margin, 17);
   }
 
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
+  doc.setFontSize(7.5);
   doc.setTextColor(196, 161, 116);
-  doc.text("MAISON HAUTE COUTURE & LUXURY ATELIER", margin, 24);
+  doc.text("MAISON HAUTE COUTURE & LUXURY ATELIER", margin, 20);
   doc.setTextColor(180, 180, 180);
-  doc.text("Bangalore · Paris · Milan | rakvihoriginals@gmail.com", margin, 29);
+  doc.text("Bangalore · Paris · Milan | rakvihoriginals@gmail.com", margin, 25);
 
   // Top Right: TAX INVOICE Title & Ref
   doc.setFont("helvetica", "bold");

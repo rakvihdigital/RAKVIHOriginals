@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { formatINR } from "@/lib/fetchProducts";
-import { downloadOrderInvoice } from "@/lib/invoiceGenerator";
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams();
@@ -13,7 +12,6 @@ function OrderSuccessContent() {
 
   const [order, setOrder] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     async function loadOrder() {
@@ -143,44 +141,7 @@ function OrderSuccessContent() {
 
         {/* Action Buttons */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.85rem" }}>
-          {order && (
-            <button
-              type="button"
-              onClick={async () => {
-                setIsDownloading(true);
-                try {
-                  await downloadOrderInvoice(order);
-                } catch (e) {
-                  console.error(e);
-                  alert("Failed to generate invoice. Please try again.");
-                } finally {
-                  setIsDownloading(false);
-                }
-              }}
-              disabled={isDownloading}
-              style={{
-                width: "100%",
-                padding: "0.85rem 1.5rem",
-                borderRadius: "999px",
-                background: "linear-gradient(135deg, rgba(196, 161, 116, 0.25) 0%, rgba(168, 139, 74, 0.2) 100%)",
-                border: "1px solid var(--color-gold)",
-                color: "var(--color-gold)",
-                fontFamily: "var(--font-heading)",
-                fontWeight: 700,
-                fontSize: "0.85rem",
-                cursor: isDownloading ? "wait" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "0.5rem",
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-              </svg>
-              {isDownloading ? "Generating PDF Invoice..." : "Download Official Tax Invoice (PDF)"}
-            </button>
-          )}
+
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
             <Link href="/profile" className="hero-cta-pill" style={{ textAlign: "center" }}>

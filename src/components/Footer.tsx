@@ -50,14 +50,15 @@ export default function Footer() {
     { name: "All Collections", href: "/collection-hub" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
-    { name: "Privacy Policy", href: "/privacy-policy" },
-    { name: "Terms & Conditions", href: "/terms" },
   ];
 
-  const categoryLinks = [
+  const genderLinks = [
     { name: "Men", href: "/collection-hub?gender=Men" },
     { name: "Women", href: "/collection-hub?gender=Women" },
     { name: "Unisex", href: "/collection-hub?gender=Unisex" },
+  ];
+
+  const otherCategoryLinks = [
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
@@ -156,16 +157,38 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Categories */}
+          {/* Column 3: Categories - Two Divisions */}
           <div className="footer-col">
             <h4 className="footer-col-title">CATEGORIES</h4>
-            <ul className="footer-links-list">
-              {categoryLinks.map((item, idx) => (
-                <li key={idx}>
-                  <Link href={item.href}>{item.name}</Link>
-                </li>
-              ))}
-            </ul>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+              {/* Division 1: Men, Women, Unisex */}
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.15em", display: "block", marginBottom: "0.5rem", fontWeight: 700 }}>
+                  Gender
+                </span>
+                <ul className="footer-links-list">
+                  {genderLinks.map((item, idx) => (
+                    <li key={idx}>
+                      <Link href={item.href}>{item.name}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Division 2: Other Collections */}
+              <div>
+                <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.15em", display: "block", marginBottom: "0.5rem", fontWeight: 700 }}>
+                  Collections
+                </span>
+                <ul className="footer-links-list">
+                  {otherCategoryLinks.map((item, idx) => (
+                    <li key={idx}>
+                      <Link href={item.href}>{item.name}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
           </div>
 
           {/* Column 4: Corporate Office & Atelier Address */}
