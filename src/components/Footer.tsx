@@ -58,7 +58,7 @@ export default function Footer() {
     { name: "Unisex", href: "/collection-hub?gender=Unisex" },
   ];
 
-  const otherCategoryLinks = [
+  const categoryLinks = [
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
@@ -157,37 +157,30 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Categories - Two Divisions */}
-          <div className="footer-col">
-            <h4 className="footer-col-title">CATEGORIES</h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-              {/* Division 1: Men, Women, Unisex */}
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.15em", display: "block", marginBottom: "0.5rem", fontWeight: 700 }}>
-                  Gender
-                </span>
-                <ul className="footer-links-list">
-                  {genderLinks.map((item, idx) => (
-                    <li key={idx}>
-                      <Link href={item.href}>{item.name}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+          {/* Column 3: Gender & Categories Side by Side */}
+          <div className="footer-col" style={{ display: "flex", gap: "2.5rem", flexWrap: "wrap" }}>
+            {/* Division 1: Gender */}
+            <div>
+              <h4 className="footer-col-title">GENDER</h4>
+              <ul className="footer-links-list">
+                {genderLinks.map((item, idx) => (
+                  <li key={idx}>
+                    <Link href={item.href}>{item.name}</Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
 
-              {/* Division 2: Other Collections */}
-              <div>
-                <span style={{ fontSize: "0.68rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.15em", display: "block", marginBottom: "0.5rem", fontWeight: 700 }}>
-                  Collections
-                </span>
-                <ul className="footer-links-list">
-                  {otherCategoryLinks.map((item, idx) => (
-                    <li key={idx}>
-                      <Link href={item.href}>{item.name}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+            {/* Division 2: Categories (Next to Gender, with 'Collections' name removed) */}
+            <div>
+              <h4 className="footer-col-title">CATEGORIES</h4>
+              <ul className="footer-links-list">
+                {categoryLinks.map((item, idx) => (
+                  <li key={idx}>
+                    <Link href={item.href}>{item.name}</Link>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
 
