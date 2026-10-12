@@ -229,16 +229,22 @@ export function formatINR(val: number): string {
 export const STORE_WIDE_DISCOUNT = 0.15;
 
 /**
- * Returns the selling price after the store-wide discount.
- * If the product already has a lower sale price in the DB, the better deal is kept.
+ * The price the store-wide discount is taken from: the DB sale price when it is set
+ * and below the regular price, otherwise the regular price.
  */
-export function applyStoreDiscount(price: number, existingSalePrice: number | null): number {
+export function storeBasePrice(price: number, salePrice: number | null): number {
   if (!price || price <= 0) return 0;
-  const discounted = Math.round(price * (1 - STORE_WIDE_DISCOUNT));
-  if (existingSalePrice !== null && existingSalePrice > 0 && existingSalePrice < discounted) {
-    return existingSalePrice;
-  }
-  return discounted;
+  if (salePrice !== null && salePrice > 0 && salePrice < price) return salePrice;
+  return price;
+}
+
+/**
+ * Returns the selling price: the store-wide discount applied on top of the sale price
+ * (or the regular price when there is no sale price).
+ */
+export function applyStoreDiscount(price: number, salePrice: number | null): number {
+  const base = storeBasePrice(price, salePrice);
+  return base > 0 ? Math.round(base * (1 - STORE_WIDE_DISCOUNT)) : 0;
 }
 
 /**
@@ -326,10 +332,11 @@ export function mapRawProduct(
 
   if (item.product_variations && Array.isArray(item.product_variations)) {
     item.product_variations.forEach((v: any, vIdx: number) => {
-      const p = Number(v.price) || 0;
+      const regularPrice = Number(v.price) || 0;
       const dbSalePrice = v.sale_price ? Number(v.sale_price) : null;
-      // Store-wide 15% discount applied on top of the regular price
-      const discountedPrice = applyStoreDiscount(p, dbSalePrice);
+      // Strike-through price is the DB sale price (or regular price); store-wide 15% comes off that
+      const p = storeBasePrice(regularPrice, dbSalePrice);
+      const discountedPrice = applyStoreDiscount(regularPrice, dbSalePrice);
       const sp = discountedPrice > 0 ? discountedPrice : null;
       const isVarSale = sp !== null && sp > 0 && sp < p;
       const effPrice = isVarSale ? sp! : p;

@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
 import { ImageOff } from "lucide-react";
+import { isSupabaseStorageUrl, supabaseImageLoader } from "@/lib/imageUrl";
 
 interface OptimizedImageProps {
   src?: string | null;
@@ -35,12 +36,15 @@ export default function OptimizedImage({
   const [currentSrc, setCurrentSrc] = useState<string>(src || "");
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+  // Resize via Supabase's image CDN; drop back to the raw original only if that fails
+  const [useResized, setUseResized] = useState(true);
   const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     setCurrentSrc(src || "");
     setLoaded(false);
     setErrored(false);
+    setUseResized(true);
   }, [src]);
 
   // Check if image is already cached/complete on mount or src change
@@ -48,9 +52,14 @@ export default function OptimizedImage({
     if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
       setLoaded(true);
     }
-  }, [currentSrc]);
+  }, [currentSrc, useResized]);
 
   const handleError = () => {
+    // If the resized variant failed, retry with the raw original
+    if (useResized && unoptimized === undefined && isSupabaseStorageUrl(currentSrc)) {
+      setUseResized(false);
+      return;
+    }
     // If the current URL failed and is different from raw src, fallback to raw src
     if (src && currentSrc !== src) {
       setCurrentSrc(src);
@@ -79,7 +88,8 @@ export default function OptimizedImage({
   }
 
   const displaySrc = currentSrc || src || "/handbag.webp";
-  const shouldSkipOptimizer = unoptimized ?? isRemoteUrl(displaySrc);
+  const resized = useResized && unoptimized === undefined && isSupabaseStorageUrl(displaySrc);
+  const shouldSkipOptimizer = resized ? false : unoptimized ?? isRemoteUrl(displaySrc);
 
   return (
     <>
@@ -102,8 +112,9 @@ export default function OptimizedImage({
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
         sizes={sizes}
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
+        loader={resized ? supabaseImageLoader : undefined}
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
         unoptimized={shouldSkipOptimizer}
         onLoad={() => setLoaded(true)}
         onError={handleError}

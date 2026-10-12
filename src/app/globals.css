@@ -5085,55 +5085,6 @@ ul {
     transform: scale(1.1);
 }
 
-/* Hover Quick Actions Bar */
-.product-quick-actions-bar {
-    position: absolute;
-    bottom: 0.85rem;
-    left: 0.85rem;
-    right: 0.85rem;
-    display: flex;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transform: translateY(12px);
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-    z-index: 4;
-    pointer-events: none;
-}
-
-.luxury-product-card-v2:hover .product-quick-actions-bar {
-    opacity: 1;
-    transform: translateY(0);
-    pointer-events: auto;
-}
-
-.action-quickview-btn {
-    flex: 1;
-    background: #ffffff;
-    color: #0c0a06;
-    font-family: var(--font-heading);
-    font-size: 0.65rem;
-    font-weight: 800;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    padding: 0.65rem 1rem;
-    border-radius: 999px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    border: none;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
-}
-
-.action-quickview-btn:hover {
-    background: var(--color-gold);
-    transform: scale(1.03);
-}
-
 /* Card Metadata / Body */
 .product-meta-details {
     padding: 1rem 1.1rem 1.1rem 1.1rem;
@@ -5208,28 +5159,11 @@ ul {
     text-decoration: line-through;
 }
 
-.card-inquire-btn {
-    background: transparent;
-    border: 1px solid rgba(196, 161, 116, 0.3);
-    color: var(--color-gold);
-    padding: 0.32rem 0.65rem;
-    border-radius: 999px;
-    font-family: var(--font-heading);
-    font-size: 0.58rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
+.card-action-btns {
     display: flex;
     align-items: center;
-    gap: 0.35rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.card-inquire-btn:hover {
-    background: var(--color-gold);
-    color: #0c0a06;
-    border-color: var(--color-gold);
+    gap: 0.4rem;
+    flex-shrink: 0;
 }
 
 /* Mobile Product Card Responsive System */
@@ -5289,9 +5223,6 @@ ul {
         height: 12px;
     }
 
-    .product-quick-actions-bar {
-        display: none !important; /* Pure touch interaction on mobile */
-    }
 
     .product-meta-details {
         padding: 0.65rem 0.65rem 0.75rem 0.65rem;
@@ -5340,9 +5271,8 @@ ul {
 
     .product-pricing-strip {
         padding-top: 0.45rem;
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0.4rem;
+        align-items: flex-end;
+        gap: 0.35rem;
     }
 
     .price-display-group {
@@ -5361,12 +5291,8 @@ ul {
         font-size: 0.68rem;
     }
 
-    .card-inquire-btn {
-        width: 100%;
-        justify-content: center;
-        padding: 0.32rem 0.5rem;
-        font-size: 0.55rem;
-        letter-spacing: 0.12em;
+    .card-action-btns {
+        gap: 0.3rem;
     }
 }
 

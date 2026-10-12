@@ -31,7 +31,6 @@ export function ProductCard({ product }: ProductCardProps) {
   const activePrice = selectedVariant.displayPrice;
   const activeOriginalPrice = selectedVariant.originalPrice ?? product.originalPrice;
   const isSale = selectedVariant.isSale ?? product.isSale;
-  const discountPercent = selectedVariant.discountPercent ?? product.discountPercent;
 
   if (product.active === false) return null;
 
@@ -69,25 +68,13 @@ export function ProductCard({ product }: ProductCardProps) {
       <div className="product-showcase-box">
         <div className="showcase-badges-top-left">
           <span className="brand-gold-badge">{product.brandName}</span>
-          {isSale && discountPercent && <span className="sale-discount-badge">{discountPercent}% OFF</span>}
         </div>
         <div className="showcase-badges-top-right">
           {product.tag && <span className="gender-tag-badge">{product.tag}</span>}
-          <button type="button" className={`wishlist-icon-btn ${isWishlisted ? "active" : ""}`} onClick={handleWishlistClick} aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"} title={isWishlisted ? "Saved in Wishlist" : "Add to Wishlist"}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill={isWishlisted ? "var(--color-gold)" : "none"} stroke="currentColor" strokeWidth="2">
-              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 1.06-8.84z" />
-            </svg>
-          </button>
-          <button type="button" className={`wishlist-icon-btn${cartAdded ? " active" : ""}`} onClick={handleCartClick} aria-label="Add to cart" title="Add to Bag">
-            {cartAdded ? "✓" : "＋"}
-          </button>
         </div>
         <Link href={`/product/${product.id}`} className="product-image-pedestal">
           <OptimizedImage src={product.img} alt={product.name} className="product-main-img" fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" />
         </Link>
-        <div className="product-quick-actions-bar">
-          <Link href={`/product/${product.id}`} className="action-quickview-btn">View Details</Link>
-        </div>
       </div>
       <div className="product-meta-details">
         <div className="product-category-row"><span className="product-meta-category">{product.material}</span></div>
@@ -103,7 +90,16 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         <div className="product-pricing-strip">
           <div className="price-display-group"><span className="current-price-tag">{activePrice}</span>{isSale && activeOriginalPrice && <span className="original-strikethrough-tag">{activeOriginalPrice}</span>}</div>
-          <Link href={`/product/${product.id}`} className="card-inquire-btn"><span>View</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7" /></svg></Link>
+          <div className="card-action-btns">
+            <button type="button" className={`wishlist-icon-btn ${isWishlisted ? "active" : ""}`} onClick={handleWishlistClick} aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"} title={isWishlisted ? "Saved in Wishlist" : "Add to Wishlist"}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill={isWishlisted ? "var(--color-gold)" : "none"} stroke="currentColor" strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78a5.5 5.5 0 0 0 1.06-8.84z" />
+              </svg>
+            </button>
+            <button type="button" className={`wishlist-icon-btn${cartAdded ? " active" : ""}`} onClick={handleCartClick} aria-label="Add to cart" title="Add to Bag">
+              {cartAdded ? "✓" : "＋"}
+            </button>
+          </div>
         </div>
       </div>
       <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} defaultTab="signin" />

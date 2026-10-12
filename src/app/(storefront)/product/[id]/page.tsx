@@ -93,7 +93,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const activePrice = selectedVariant ? selectedVariant.displayPrice : product.price;
   const activeOriginalPrice = selectedVariant ? selectedVariant.originalPrice : product.originalPrice;
   const isSale = selectedVariant ? selectedVariant.isSale : product.isSale;
-  const discountPercent = selectedVariant ? selectedVariant.discountPercent : product.discountPercent;
   const isWishlisted = isInWishlist(product.id);
 
   const handleAddToCart = () => {
@@ -186,9 +185,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   fill
                   sizes="(max-width: 768px) 100vw, 50vw"
                 />
-                {isSale && discountPercent && (
-                  <span className="quickview-sale-badge">{discountPercent}% OFF</span>
-                )}
                 {product.tag && (
                   <span className="quickview-gender-badge">{product.tag}</span>
                 )}
@@ -248,9 +244,6 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
                   <span className="pdp-current-price">{activePrice}</span>
                   {isSale && activeOriginalPrice && (
                     <span className="pdp-original-price">{activeOriginalPrice}</span>
-                  )}
-                  {isSale && discountPercent && (
-                    <span className="pdp-save-badge">Save {discountPercent}%</span>
                   )}
                 </div>
                 <span style={{ fontSize: "0.78rem", color: "rgba(255, 255, 255, 0.5)" }}>

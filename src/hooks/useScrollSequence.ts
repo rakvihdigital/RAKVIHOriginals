@@ -16,6 +16,7 @@ export function initScrollSequence(): () => void {
     // ─── CONFIGURATION ───
     const LERP_FACTOR = 0.14;          // Fast, silky smooth easing
     const MAX_CONCURRENT_LOADS = 4;    // Parallel HTTP/2 streams
+    const BACKGROUND_CONCURRENCY = 2;  // Bulk preloading leaves bandwidth for product images
     const NEAR_WINDOW_BEHIND = 4;      // Frames behind scroll pos
     const NEAR_WINDOW_AHEAD = 16;      // Frames ahead of scroll pos
     const isMobile = typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches;
@@ -31,15 +32,19 @@ export function initScrollSequence(): () => void {
 
     // ─── SHARED FRAME LOADER ───
     let inflight = 0;
+    // Only frames around the scroll position load until the intro loader is done;
+    // the bulk sweep (hundreds of 2560px frames) waits so it doesn't starve the first paint.
+    let backgroundReady = false;
 
     function pumpLoader() {
         if (abort.signal.aborted) return;
+        const deferred = new Set();
         while (inflight < MAX_CONCURRENT_LOADS) {
             let bestSeq = null;
             let highestPriority = -1;
 
             for (const seq of sequences) {
-                if (!seq.loadingStarted || seq.allRequested || (!seq.isNear && !seq.isVisible)) continue;
+                if (deferred.has(seq) || !seq.loadingStarted || seq.allRequested || (!seq.isNear && !seq.isVisible)) continue;
                 const priority = seq.loadPriority();
                 if (priority > highestPriority) {
                     highestPriority = priority;
@@ -50,6 +55,10 @@ export function initScrollSequence(): () => void {
             if (!bestSeq) return;
 
             const index = bestSeq.nextFrameToLoad();
+            if (index === -2) {
+                deferred.add(bestSeq);
+                continue;
+            }
             if (index < 0) {
                 bestSeq.allRequested = true;
                 continue;
@@ -237,6 +246,9 @@ export function initScrollSequence(): () => void {
                 if (!this.requested[behind]) return behind;
             }
 
+            // Remaining tiers are background preloading (-2 = try again later)
+            if (!backgroundReady || inflight >= BACKGROUND_CONCURRENCY) return -2;
+
             // 2. Second priority: milestone keyframes across the sequence
             while (this.milestoneIndex < this.milestones.length) {
                 const ms = this.milestones[this.milestoneIndex++];
@@ -268,6 +280,10 @@ export function initScrollSequence(): () => void {
 
                     if (this.drawnIndex < 0 || index === 0) {
                         this.drawFrame(this.lerpedFrame, true);
+                        if (this.config.isMain && this.drawnIndex >= 0) {
+                            // Lets the intro loader know the hero is painted underneath it
+                            window.__rkHeroReady = true;
+                        }
                     } else if (this.isVisible) {
                         this.startRenderLoop();
                     }
@@ -789,6 +805,23 @@ export function initScrollSequence(): () => void {
             timer = setTimeout(() => fn.apply(this, args), delay);
         };
     }
+
+    // ─── BACKGROUND PRELOAD GATE ───
+    window.__rkHeroReady = false;
+    function enableBackgroundLoading() {
+        if (backgroundReady || abort.signal.aborted) return;
+        backgroundReady = true;
+        for (const seq of sequences) seq.allRequested = false;
+        pumpLoader();
+    }
+    if (document.documentElement.classList.contains('rk-intro-active')) {
+        listen(window, 'rk:intro-done', enableBackgroundLoading, { once: true });
+    }
+    const backgroundTimer = setTimeout(
+        enableBackgroundLoading,
+        document.documentElement.classList.contains('rk-intro-active') ? 9000 : 1500
+    );
+    cleanups.push(() => clearTimeout(backgroundTimer));
 
     // ─── BOOT ───
     if (document.readyState === 'loading') {

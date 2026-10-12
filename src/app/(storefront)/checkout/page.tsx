@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { formatINR } from "@/lib/fetchProducts";
 import { supabase } from "@/lib/supabase";
+import { supabaseImageUrl } from "@/lib/imageUrl";
 
 const INDIAN_STATES = [
   "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa",
@@ -470,7 +471,7 @@ export default function CheckoutPage() {
                     return (
                       <div key={idx} style={{ display: "grid", gridTemplateColumns: "50px 1fr auto", gap: "12px", alignItems: "center", borderBottom: "1px solid rgba(255, 255, 255, 0.04)", paddingBottom: "0.75rem" }}>
                         <img
-                          src={item.product.img}
+                          src={supabaseImageUrl(item.product.img, 120)}
                           alt={item.product.name}
                           style={{ width: "50px", height: "50px", objectFit: "contain", borderRadius: "8px", background: "rgba(255, 255, 255, 0.05)" }}
                         />

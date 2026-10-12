@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { formatINR } from "@/lib/fetchProducts";
+import { supabaseImageUrl } from "@/lib/imageUrl";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -340,7 +341,7 @@ export default function ProfilePage() {
                               {ord.cart_items.map((it: any, itemIdx: number) => (
                                 <div key={itemIdx} style={{ display: "grid", gridTemplateColumns: "45px 1fr auto", gap: "12px", alignItems: "center" }}>
                                   <img
-                                    src={it.image || "/handbag.webp"}
+                                    src={it.image ? supabaseImageUrl(it.image, 120) : "/handbag.webp"}
                                     alt={it.name}
                                     style={{ width: "45px", height: "45px", objectFit: "contain", borderRadius: "8px", background: "rgba(255, 255, 255, 0.05)" }}
                                   />
@@ -475,7 +476,7 @@ export default function ProfilePage() {
                         <div key={item.id} className="auth-card-wrap" style={{ padding: "1.25rem", textAlign: "center" }}>
                           <Link href={`/product/${item.id}`} style={{ textDecoration: "none" }}>
                             <img
-                              src={item.img}
+                              src={supabaseImageUrl(item.img, 400)}
                               alt={item.name}
                               style={{ width: "100%", height: "140px", objectFit: "contain", marginBottom: "0.75rem" }}
                             />

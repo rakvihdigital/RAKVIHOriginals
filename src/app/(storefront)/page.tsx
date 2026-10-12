@@ -195,8 +195,8 @@ export default function Home() {
 {/* ============================================================ */}
         {/*  HERO 2 — L.V TRAINER SNEAKER SCROLL ANIMATION               */}
         {/* ============================================================ */}
-        <section id="hero2" className="hero-section" style={{ paddingTop: "0", minHeight: "auto", marginTop: "-3rem" }}>
-            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingBottom: "0.2rem" }}>
+        <section id="hero2" className="hero-section" style={{ paddingTop: "0", minHeight: "auto" }}>
+            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingTop: "0.75rem", paddingBottom: "0.2rem" }}>
                 <div className="hero-accent-line reveal-element justify-center mb-1">
                     <span className="accent-label">Explore Category</span>
                 </div>
@@ -338,8 +338,8 @@ export default function Home() {
         {/* ============================================================ */}
         {/*  HERO 6 — BELTS SCROLL ANIMATION                             */}
         {/* ============================================================ */}
-        <section id="hero6" className="hero-section" style={{ paddingTop: "0", minHeight: "auto", marginTop: "-3rem" }}>
-            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingBottom: "0.2rem" }}>
+        <section id="hero6" className="hero-section" style={{ paddingTop: "0", minHeight: "auto" }}>
+            <div className="z-10 relative flex flex-col items-center text-center" style={{ marginTop: "0", paddingTop: "0.75rem", paddingBottom: "0.2rem" }}>
                 <div className="hero-accent-line reveal-element justify-center mb-1">
                     <span className="accent-label">Explore Category</span>
                 </div>

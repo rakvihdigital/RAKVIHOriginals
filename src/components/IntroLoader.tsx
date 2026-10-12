@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Cinematic brand intro shown once per browser session when the storefront opens.
@@ -10,34 +10,34 @@ import { useEffect, useState } from "react";
  *   2. "RAKVIH" (white) wipes in with a soft blur-to-focus
  *   3. "ORIGINALS" (gold) follows
  *   4. A light sweep glides across the logo, gold hairline + tagline appear
- *   5. Once the page has loaded, the logo lifts and the curtains part to reveal the site
+ *   5. Once the page is ready and the bar reaches 100, the logo lifts and the curtains part
  *
  * A tiny inline script in the root layout adds `rk-intro-seen` to <html> on repeat
  * visits in the same session, so the loader is hidden before first paint.
  */
 
 const SESSION_KEY = "rakvih_intro_seen";
-const MIN_DISPLAY_MS = 1800; // ensures both 'RAKVIH' and 'ORIGINALS' reveal completely before exit
-const MAX_DISPLAY_MS = 2700; // safety ceiling so site is never blocked
-const EXIT_MS = 600;
+const MIN_DISPLAY_MS = 2800; // logo reveal, shine sweep and tagline all finish (~2.3s) with a short beat after
+const MAX_DISPLAY_MS = 7000; // safety ceiling so a slow network never blocks the site
+const HOLD_AT_100_MS = 400; // let "100" register before the curtains part
+const EXIT_MS = 1250; // matches the curtain transition (0.25s delay + 0.95s) in globals.css
 
 type Phase = "playing" | "exiting" | "done";
 
+/** The page is ready to reveal once fonts are in and, on the homepage, the first hero frame is painted. */
+function isPageReady(): boolean {
+  if (document.readyState === "loading") return false;
+  if (document.fonts && document.fonts.status !== "loaded") return false;
+  const hasHero = !!document.getElementById("hero-canvas");
+  return !hasHero || (window as Window & { __rkHeroReady?: boolean }).__rkHeroReady === true;
+}
+
 export default function IntroLoader() {
   const [phase, setPhase] = useState<Phase>("playing");
-  const [progress, setProgress] = useState(0);
+  const barRef = useRef<HTMLSpanElement>(null);
+  const percentRef = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
-    // Eagerly preload both logo parts to guarantee zero network delay during animation
-    try {
-      const p1 = new Image();
-      p1.src = "/rakvih-logo-mark.png";
-      const p2 = new Image();
-      p2.src = "/rakvih-logo-originals.png";
-    } catch {
-      /* ignore */
-    }
-
     const root = document.documentElement;
 
     // Already shown this session → skip entirely
@@ -49,7 +49,10 @@ export default function IntroLoader() {
     }
     if (seen) {
       // Already hidden pre-paint by the `rk-intro-seen` class; just unmount.
-      const t = setTimeout(() => setPhase("done"), 0);
+      const t = setTimeout(() => {
+        setPhase("done");
+        window.dispatchEvent(new Event("rk:intro-done"));
+      }, 0);
       return () => clearTimeout(t);
     }
 
@@ -59,56 +62,59 @@ export default function IntroLoader() {
     const minTime = reduceMotion ? 600 : MIN_DISPLAY_MS;
     const start = performance.now();
 
-    let loaded = document.readyState === "complete";
-    let finished = false;
+    let progress = 0;
+    let ready = false;
+    let completedAt = 0;
+    let exiting = false;
     let rafId = 0;
     const timers: ReturnType<typeof setTimeout>[] = [];
 
-    const finish = () => {
-      if (finished) return;
-      finished = true;
-      setProgress(100);
+    const render = () => {
+      if (barRef.current) barRef.current.style.transform = `scaleX(${progress / 100})`;
+      if (percentRef.current) percentRef.current.textContent = String(Math.round(progress)).padStart(2, "0");
+    };
+
+    const exit = () => {
+      exiting = true;
       try {
         sessionStorage.setItem(SESSION_KEY, "1");
       } catch {
         /* ignore */
       }
-      // Unlock scroll immediately when curtains start parting
+      // Unlock scroll as the curtains start parting
       root.classList.remove("rk-intro-active");
       setPhase("exiting");
       timers.push(
         setTimeout(() => {
           setPhase("done");
+          window.dispatchEvent(new Event("rk:intro-done"));
         }, reduceMotion ? 200 : EXIT_MS)
       );
     };
 
-    const tryFinish = () => {
-      if (performance.now() - start >= minTime && loaded) finish();
-    };
-
-    const onLoad = () => {
-      loaded = true;
-      tryFinish();
-    };
-    window.addEventListener("load", onLoad);
-
-    // Smooth progress: eases toward 90% while waiting, jumps to 100% when loaded
+    // Progress follows elapsed time but stalls at 90% until the page is actually ready,
+    // then glides to 100%, holds briefly, and only then reveals the site.
     const tick = () => {
-      const elapsed = performance.now() - start;
+      const now = performance.now();
+      const elapsed = now - start;
+      if (!ready && (isPageReady() || elapsed >= MAX_DISPLAY_MS)) ready = true;
+
       const timeRatio = Math.min(elapsed / minTime, 1);
-      const target = loaded ? timeRatio * 100 : Math.min(timeRatio * 100, 90);
-      setProgress((p) => (target > p ? p + (target - p) * 0.12 : p));
-      tryFinish();
-      if (!finished) rafId = requestAnimationFrame(tick);
+      const target = ready ? timeRatio * 100 : Math.min(timeRatio * 100, 90);
+      if (target > progress) progress = Math.min(100, progress + Math.max((target - progress) * 0.1, 0.15));
+      if (progress > 99.5) progress = 100;
+      render();
+
+      if (progress === 100 && !completedAt) completedAt = now;
+      if (completedAt && now - completedAt >= HOLD_AT_100_MS) {
+        exit();
+        return;
+      }
+      if (!exiting) rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);
 
-    // Safety net
-    timers.push(setTimeout(finish, MAX_DISPLAY_MS));
-
     return () => {
-      window.removeEventListener("load", onLoad);
       cancelAnimationFrame(rafId);
       timers.forEach(clearTimeout);
       root.classList.remove("rk-intro-active");
@@ -160,10 +166,10 @@ export default function IntroLoader() {
         <p className="rk-loader-tagline">Maison of Timeless Luxury</p>
 
         <div className="rk-loader-progress" aria-hidden="true">
-          <span style={{ transform: `scaleX(${progress / 100})` }} />
+          <span ref={barRef} />
         </div>
-        <span className="rk-loader-percent" aria-hidden="true">
-          {String(Math.round(progress)).padStart(2, "0")}
+        <span ref={percentRef} className="rk-loader-percent" aria-hidden="true">
+          00
         </span>
       </div>
     </div>

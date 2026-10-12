@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { StoreProduct } from "@/lib/fetchProducts";
+import { supabaseImageUrl } from "@/lib/imageUrl";
 
 interface QuickViewProps {
   product: StoreProduct | null;
@@ -65,15 +66,10 @@ export function ProductQuickViewModal({ product, onClose }: QuickViewProps) {
           <div className="quickview-gallery">
             <div className="quickview-main-image-wrap">
               <img
-                src={currentImage}
+                src={supabaseImageUrl(currentImage, 1000)}
                 alt={product.name}
                 className="quickview-main-img"
               />
-              {product.isSale && product.discountPercent && (
-                <span className="quickview-sale-badge">
-                  {product.discountPercent}% OFF
-                </span>
-              )}
               {product.tag && (
                 <span className="quickview-gender-badge">{product.tag}</span>
               )}
@@ -89,7 +85,7 @@ export function ProductQuickViewModal({ product, onClose }: QuickViewProps) {
                     className={`quickview-thumb-btn ${idx === selectedImageIdx ? "active" : ""}`}
                     onClick={() => setSelectedImageIdx(idx)}
                   >
-                    <img src={imgUrl} alt={`${product.name} view ${idx + 1}`} />
+                    <img src={supabaseImageUrl(imgUrl, 160)} alt={`${product.name} view ${idx + 1}`} />
                   </button>
                 ))}
               </div>

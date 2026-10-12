@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import OptimizedImage from "@/components/OptimizedImage";
-import { applyStoreDiscount, STORE_WIDE_DISCOUNT } from "@/lib/fetchProducts";
+import { applyStoreDiscount, storeBasePrice, STORE_WIDE_DISCOUNT } from "@/lib/fetchProducts";
 
 type Variation = {
   id: number;
@@ -416,7 +416,10 @@ export default function ProductsAdminPage() {
       return { finalLabel: "No variations", origLabel: null, discountPercent: null, sub: null };
     }
 
-    const rawPrices = vars.map((v) => Number(v.price) || 0);
+    // Strike-through shows the price the 15% is taken from (sale price, else regular price)
+    const rawPrices = vars.map((v) =>
+      storeBasePrice(Number(v.price) || 0, v.sale_price != null ? Number(v.sale_price) : null)
+    );
     const finalPrices = vars.map((v) =>
       applyStoreDiscount(Number(v.price) || 0, v.sale_price != null ? Number(v.sale_price) : null)
     );
@@ -785,24 +788,34 @@ export default function ProductsAdminPage() {
                                       <th>Color</th>
                                       <th>Size</th>
                                       <th>Regular Price</th>
-                                      <th>Final Price (15% OFF)</th>
+                                      <th>Sale Price</th>
+                                      <th>Final Price ({Math.round(STORE_WIDE_DISCOUNT * 100)}% OFF Sale Price)</th>
                                       <th>Stock</th>
                                     </tr>
                                   </thead>
                                   <tbody>
                                     {productVariations.map((v) => {
                                       const rawP = Number(v.price) || 0;
-                                      const finalP = applyStoreDiscount(rawP, v.sale_price != null ? Number(v.sale_price) : null);
-                                      const hasDiscount = finalP < rawP;
-                                      const discPercent = rawP > 0 && hasDiscount ? Math.round(((rawP - finalP) / rawP) * 100) : null;
+                                      const saleP = v.sale_price != null ? Number(v.sale_price) : null;
+                                      const baseP = storeBasePrice(rawP, saleP);
+                                      const hasSale = baseP > 0 && baseP < rawP;
+                                      const finalP = applyStoreDiscount(rawP, saleP);
+                                      const discPercent = baseP > 0 && finalP < baseP ? Math.round(STORE_WIDE_DISCOUNT * 100) : null;
                                       return (
                                         <tr key={v.id}>
                                           <td>{v.color_id != null ? attrById.get(v.color_id) ?? "—" : "—"}</td>
                                           <td>{v.size_id != null ? attrById.get(v.size_id) ?? "—" : "—"}</td>
                                           <td>
-                                            <span className={hasDiscount ? "prod-var-orig" : "prod-var-price"}>
+                                            <span className={finalP < rawP ? "prod-var-orig" : "prod-var-price"}>
                                               ₹{rawP.toLocaleString()}
                                             </span>
+                                          </td>
+                                          <td>
+                                            {hasSale ? (
+                                              <span className="prod-var-orig">₹{baseP.toLocaleString()}</span>
+                                            ) : (
+                                              <span className="prod-var-price">—</span>
+                                            )}
                                           </td>
                                           <td>
                                             <span className="prod-var-final">

@@ -4,6 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { formatINR } from "@/lib/fetchProducts";
+import { supabaseImageUrl } from "@/lib/imageUrl";
 
 export default function CartPage() {
   const { cart, cartSubtotal, updateCartQuantity, removeFromCart, clearCart, isAuthenticated, isLoading } = useAuth();
@@ -166,7 +167,7 @@ export default function CartPage() {
                         }}
                       >
                         <img
-                          src={item.product.img}
+                          src={supabaseImageUrl(item.product.img, 240)}
                           alt={item.product.name}
                           style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }}
                         />
