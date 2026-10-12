@@ -5099,11 +5099,13 @@ ul {
     transform: translateY(12px);
     transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     z-index: 4;
+    pointer-events: none;
 }
 
 .luxury-product-card-v2:hover .product-quick-actions-bar {
     opacity: 1;
     transform: translateY(0);
+    pointer-events: auto;
 }
 
 .action-quickview-btn {
@@ -5228,6 +5230,144 @@ ul {
     background: var(--color-gold);
     color: #0c0a06;
     border-color: var(--color-gold);
+}
+
+/* Mobile Product Card Responsive System */
+@media (max-width: 640px) {
+    .luxury-product-card-v2 {
+        border-radius: 0.75rem;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+        contain-intrinsic-size: 320px;
+    }
+
+    .product-showcase-box {
+        border-radius: 0.75rem 0.75rem 0 0;
+        aspect-ratio: 1 / 1;
+    }
+
+    .product-image-pedestal {
+        padding: 0.5rem;
+    }
+
+    .showcase-badges-top-left {
+        top: 0.4rem;
+        left: 0.4rem;
+        gap: 0.2rem;
+    }
+
+    .brand-gold-badge {
+        font-size: 0.48rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 0.18rem 0.45rem;
+    }
+
+    .sale-discount-badge {
+        font-size: 0.46rem;
+        font-weight: 700;
+        padding: 0.14rem 0.38rem;
+    }
+
+    .showcase-badges-top-right {
+        top: 0.4rem;
+        right: 0.4rem;
+        gap: 0.25rem;
+    }
+
+    .gender-tag-badge {
+        display: none; /* Hide on compact 2-column mobile to prevent badge overlap */
+    }
+
+    .wishlist-icon-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.75rem;
+    }
+
+    .wishlist-icon-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    .product-quick-actions-bar {
+        display: none !important; /* Pure touch interaction on mobile */
+    }
+
+    .product-meta-details {
+        padding: 0.65rem 0.65rem 0.75rem 0.65rem;
+    }
+
+    .product-category-row {
+        margin-bottom: 0.15rem;
+    }
+
+    .product-meta-category {
+        font-size: 0.55rem;
+        letter-spacing: 0.12em;
+    }
+
+    .product-card-heading {
+        font-size: 0.82rem;
+        line-height: 1.25;
+        margin: 0.15rem 0 0.35rem 0;
+        height: 2.1rem;
+        max-height: 2.1rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-card-variants-row {
+        margin: 0.1rem 0 0.35rem 0;
+        gap: 0.25rem;
+    }
+
+    .variant-label-tiny {
+        font-size: 0.52rem;
+    }
+
+    .variant-chip-btn {
+        font-size: 0.52rem;
+        padding: 0.12rem 0.35rem;
+        border-radius: 4px;
+    }
+
+    .variant-more-chip {
+        font-size: 0.52rem;
+        padding: 0.1rem 0.25rem;
+    }
+
+    .product-pricing-strip {
+        padding-top: 0.45rem;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.4rem;
+    }
+
+    .price-display-group {
+        display: flex;
+        align-items: baseline;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+    }
+
+    .current-price-tag {
+        font-size: 0.88rem;
+        font-weight: 700;
+    }
+
+    .original-strikethrough-tag {
+        font-size: 0.68rem;
+    }
+
+    .card-inquire-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.32rem 0.5rem;
+        font-size: 0.55rem;
+        letter-spacing: 0.12em;
+    }
 }
 
 /* ==========================================================
@@ -5873,7 +6013,92 @@ ul {
 @media (max-width: 992px) {
     .product-detail-grid {
         grid-template-columns: 1fr;
-        gap: 2.5rem;
+        gap: 2rem;
+    }
+    .pdp-gallery-container {
+        position: static !important;
+        top: auto !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .product-page-section {
+        padding: 1rem 0 3.5rem 0;
+    }
+    .product-detail-grid {
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    .pdp-gallery-container {
+        position: static !important;
+        gap: 0.75rem;
+    }
+    .pdp-main-image-wrap {
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+        aspect-ratio: 1 / 1;
+        max-height: 400px;
+    }
+    .pdp-thumbnails-strip {
+        gap: 0.5rem;
+        padding-bottom: 0.25rem;
+    }
+    .pdp-thumb-card {
+        width: 60px;
+        height: 60px;
+        border-radius: 0.75rem;
+        padding: 0.35rem;
+    }
+    .pdp-badges-row {
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+    .pdp-brand-badge {
+        font-size: 0.62rem;
+        padding: 0.3rem 0.75rem;
+    }
+    .pdp-category-pill {
+        font-size: 0.65rem;
+    }
+    .pdp-stock-badge {
+        font-size: 0.58rem;
+        padding: 0.25rem 0.6rem;
+    }
+    .pdp-title {
+        font-size: 1.45rem;
+        line-height: 1.25;
+        margin-bottom: 0.5rem;
+    }
+    .pdp-meta-row {
+        gap: 1rem;
+        font-size: 0.72rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .pdp-price-card {
+        padding: 1rem 1.15rem;
+        border-radius: 1rem;
+        margin-bottom: 1.25rem;
+    }
+    .pdp-price-main-row {
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    .pdp-current-price {
+        font-size: 1.65rem;
+    }
+    .pdp-original-price {
+        font-size: 1.15rem;
+    }
+    .pdp-save-badge {
+        font-size: 0.62rem;
+        padding: 0.25rem 0.6rem;
+    }
+    .pdp-cart-btn {
+        padding: 0.85rem 1.25rem;
+        font-size: 0.75rem;
+        letter-spacing: 0.12em;
     }
 }
 
@@ -9300,18 +9525,18 @@ html.rk-intro-active, html.rk-intro-active body { overflow: hidden !important; }
 .rk-logo-mark {
     width: 49.6%; /* 443 / 893 */
     clip-path: inset(0 100% 0 0);
-    filter: blur(10px);
+    filter: blur(8px);
     opacity: 0;
-    transform: translateY(8px);
-    animation: rkReveal 1.15s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+    transform: translateY(6px);
+    animation: rkReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
 }
 .rk-logo-originals {
     width: 50.4%; /* 450 / 893 */
     clip-path: inset(0 100% 0 0);
-    filter: blur(10px);
+    filter: blur(8px);
     opacity: 0;
-    transform: translateY(8px);
-    animation: rkReveal 1.1s cubic-bezier(0.22, 1, 0.36, 1) 1.0s forwards;
+    transform: translateY(6px);
+    animation: rkReveal 0.65s cubic-bezier(0.22, 1, 0.36, 1) 0.45s forwards;
 }
 
 /* Light sweep clipped to the logo shape */
@@ -9325,7 +9550,7 @@ html.rk-intro-active, html.rk-intro-active body { overflow: hidden !important; }
     -webkit-mask: url("/rakvih-logo.png") center / 100% 100% no-repeat;
     mask: url("/rakvih-logo.png") center / 100% 100% no-repeat;
     mix-blend-mode: screen;
-    animation: rkShine 1.3s ease-in-out 2.05s forwards;
+    animation: rkShine 1.1s ease-in-out 1.15s forwards;
 }
 
 .rk-loader-rule {
@@ -9334,7 +9559,7 @@ html.rk-intro-active, html.rk-intro-active body { overflow: hidden !important; }
     margin-top: clamp(18px, 3vw, 28px);
     background: linear-gradient(90deg, transparent, #c4a174, transparent);
     transform: scaleX(0);
-    animation: rkRule 1s cubic-bezier(0.65, 0, 0.35, 1) 1.7s forwards;
+    animation: rkRule 0.7s cubic-bezier(0.65, 0, 0.35, 1) 0.9s forwards;
 }
 
 .rk-loader-tagline {
@@ -9347,7 +9572,7 @@ html.rk-intro-active, html.rk-intro-active body { overflow: hidden !important; }
     text-transform: uppercase;
     color: rgba(232, 214, 186, 0.75);
     opacity: 0;
-    animation: rkTagline 1.1s ease 2.0s forwards;
+    animation: rkTagline 0.8s ease 1.1s forwards;
     white-space: nowrap;
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ImageOff } from "lucide-react";
 
 interface OptimizedImageProps {
@@ -13,48 +13,12 @@ interface OptimizedImageProps {
   width?: number;
   height?: number;
   sizes?: string;
-  /**
-   * Set to false if you specifically want Next.js to proxy/resize this
-   * image through /_next/image. Defaults to true for any absolute
-   * http(s) URL, since those are almost always already served from a
-   * CDN (e.g. Supabase Storage) and don't need server-side re-encoding.
-   *
-   * WHY THIS MATTERS:
-   * Next's built-in optimizer fetches the source image on your server,
-   * resizes/re-encodes it, then serves the result. That fetch has an
-   * internal timeout (~7s in your logs). Under load — e.g. a table
-   * rendering 20 thumbnails at once — some of those fetches to Supabase
-   * Storage don't complete in time and the optimizer throws
-   * `TimeoutError`, which surfaces as a 500 on `/_next/image` and an
-   * empty/broken thumbnail. Since Supabase Storage already serves
-   * reasonably-sized, CDN-cached files, there's no real benefit to
-   * re-optimizing them server-side — skipping that step removes the
-   * timeout risk entirely and the browser loads the image directly.
-   */
   unoptimized?: boolean;
 }
 
 function isRemoteUrl(src: string | null | undefined): boolean {
   if (!src) return false;
   return /^https?:\/\//i.test(src);
-}
-
-function getImageSrc(src: string): string {
-  try {
-    const url = new URL(src);
-    const objectPath = "/storage/v1/object/public/";
-    const objectIndex = url.pathname.indexOf(objectPath);
-
-    if (objectIndex === -1) return src;
-
-    url.pathname = `${url.pathname.slice(0, objectIndex)}/storage/v1/render/image/public/${url.pathname.slice(objectIndex + objectPath.length)}`;
-    url.searchParams.set("width", "800");
-    url.searchParams.set("quality", "75");
-    url.searchParams.set("resize", "contain");
-    return url.toString();
-  } catch {
-    return src;
-  }
 }
 
 export default function OptimizedImage({
@@ -68,36 +32,72 @@ export default function OptimizedImage({
   sizes = "100vw",
   unoptimized,
 }: OptimizedImageProps) {
+  const [currentSrc, setCurrentSrc] = useState<string>(src || "");
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
+    setCurrentSrc(src || "");
     setLoaded(false);
     setErrored(false);
   }, [src]);
 
-  if (!src || errored) {
+  // Check if image is already cached/complete on mount or src change
+  useEffect(() => {
+    if (imgRef.current?.complete && imgRef.current?.naturalWidth > 0) {
+      setLoaded(true);
+    }
+  }, [currentSrc]);
+
+  const handleError = () => {
+    // If the current URL failed and is different from raw src, fallback to raw src
+    if (src && currentSrc !== src) {
+      setCurrentSrc(src);
+      return;
+    }
+    // If raw src also failed, fallback to default luxury placeholder image
+    if (currentSrc !== "/handbag.webp") {
+      setCurrentSrc("/handbag.webp");
+      return;
+    }
+    setErrored(true);
+  };
+
+  if ((!src && !currentSrc) || errored) {
     return (
-      <div className={`flex items-center justify-center bg-slate-100 ${className}`}>
-        <ImageOff className="text-slate-300" size={28} />
+      <div
+        className={`flex items-center justify-center ${className}`}
+        style={{
+          background: "radial-gradient(circle at 50% 50%, rgba(35, 30, 24, 0.5) 0%, rgba(12, 12, 14, 0.9) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.05)",
+        }}
+      >
+        <ImageOff style={{ color: "rgba(196, 161, 116, 0.35)" }} size={24} />
       </div>
     );
   }
 
-  const imageSrc = isRemoteUrl(src) ? getImageSrc(src) : src;
-
-  // Default: skip the Next.js image optimizer for any remote (CDN) URL.
-  // Caller can still force optimization by passing unoptimized={false}.
-  const shouldSkipOptimizer = unoptimized ?? isRemoteUrl(src);
+  const displaySrc = currentSrc || src || "/handbag.webp";
+  const shouldSkipOptimizer = unoptimized ?? isRemoteUrl(displaySrc);
 
   return (
     <>
+      {/* Luxury dark shimmer placeholder */}
       {!loaded && (
-        <div className={`absolute inset-0 bg-slate-100 animate-pulse ${fill ? "" : className}`} />
+        <div
+          className={`absolute inset-0 pointer-events-none ${fill ? "" : className}`}
+          style={{
+            background: "linear-gradient(135deg, rgba(28, 26, 32, 0.5) 0%, rgba(14, 14, 18, 0.8) 100%)",
+            transition: "opacity 0.4s ease",
+            zIndex: 1,
+          }}
+        />
       )}
       <Image
-        src={imageSrc}
-        alt={alt}
+        ref={imgRef}
+        src={displaySrc}
+        alt={alt || "RAKVIH"}
         fill={fill}
         width={!fill ? width : undefined}
         height={!fill ? height : undefined}
@@ -106,10 +106,8 @@ export default function OptimizedImage({
         loading={priority ? undefined : "lazy"}
         unoptimized={shouldSkipOptimizer}
         onLoad={() => setLoaded(true)}
-        onError={() => setErrored(true)}
-        className={`${className} transition-opacity duration-500 ease-out ${
-          loaded ? "opacity-100" : "opacity-0"
-        }`}
+        onError={handleError}
+        className={`${className} transition-opacity duration-300 ease-out`}
       />
     </>
   );

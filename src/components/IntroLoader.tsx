@@ -17,8 +17,8 @@ import { useEffect, useState } from "react";
  */
 
 const SESSION_KEY = "rakvih_intro_seen";
-const MIN_DISPLAY_MS = 1200; // brief cinematic brand reveal
-const MAX_DISPLAY_MS = 2200; // never block the site or user interactions
+const MIN_DISPLAY_MS = 1800; // ensures both 'RAKVIH' and 'ORIGINALS' reveal completely before exit
+const MAX_DISPLAY_MS = 2700; // safety ceiling so site is never blocked
 const EXIT_MS = 600;
 
 type Phase = "playing" | "exiting" | "done";
@@ -28,6 +28,16 @@ export default function IntroLoader() {
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    // Eagerly preload both logo parts to guarantee zero network delay during animation
+    try {
+      const p1 = new Image();
+      p1.src = "/rakvih-logo-mark.png";
+      const p2 = new Image();
+      p2.src = "/rakvih-logo-originals.png";
+    } catch {
+      /* ignore */
+    }
+
     const root = document.documentElement;
 
     // Already shown this session → skip entirely
