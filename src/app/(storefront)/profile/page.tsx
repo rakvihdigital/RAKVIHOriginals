@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { formatINR } from "@/lib/fetchProducts";
+import { downloadOrderInvoice } from "@/lib/invoiceGenerator";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -14,6 +15,19 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<"orders" | "details" | "wishlist">("orders");
   const [orders, setOrders] = useState<any[]>([]);
   const [isOrdersLoading, setIsOrdersLoading] = useState(true);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (order: any) => {
+    try {
+      setDownloadingInvoiceId(order.id);
+      await downloadOrderInvoice(order);
+    } catch (err) {
+      console.error("Failed to generate invoice:", err);
+      alert("Could not generate invoice PDF. Please try again.");
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
 
   // Profile Edit State
   const [editName, setEditName] = useState("");
@@ -71,7 +85,7 @@ export default function ProfilePage() {
   if (!isAuthenticated) {
     return (
       <main className="subpage-wrapper">
-        <section style={{ padding: "8rem 0" }}>
+        <section style={{ padding: "4rem 0" }}>
           <div className="subpage-container" style={{ textAlign: "center", maxWidth: "550px", margin: "0 auto" }}>
             <div className="auth-card-wrap">
               <span className="brand-gold-badge" style={{ marginBottom: "1rem" }}>
@@ -289,7 +303,7 @@ export default function ProfilePage() {
                         You haven&apos;t placed any luxury acquisitions with this account yet.
                       </p>
                       <Link href="/collection-hub" className="hero-cta-pill">
-                        Explore Collection Hub
+                        Explore All Collections
                       </Link>
                     </div>
                   ) : (
@@ -362,13 +376,38 @@ export default function ProfilePage() {
                             </div>
                           )}
 
-                          {/* Delivery Address Snippet */}
+                          {/* Delivery Address Snippet & Invoice Download */}
                           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", paddingTop: "1rem" }}>
                             <div style={{ fontSize: "0.75rem", color: "rgba(255, 255, 255, 0.5)" }}>
                               <span>Delivered to: </span>
                               <strong style={{ color: "#ffffff" }}>{ord.house_number}, {ord.street}, {ord.city}</strong>
                             </div>
 
+                            <button
+                              type="button"
+                              onClick={() => handleDownloadInvoice(ord)}
+                              disabled={downloadingInvoiceId === ord.id}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.4rem",
+                                background: "rgba(196, 161, 116, 0.15)",
+                                border: "1px solid rgba(196, 161, 116, 0.4)",
+                                color: "var(--color-gold)",
+                                padding: "0.4rem 0.9rem",
+                                borderRadius: "8px",
+                                fontSize: "0.75rem",
+                                fontFamily: "var(--font-heading)",
+                                fontWeight: 700,
+                                cursor: downloadingInvoiceId === ord.id ? "wait" : "pointer",
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                              </svg>
+                              {downloadingInvoiceId === ord.id ? "Generating PDF..." : "Download Invoice"}
+                            </button>
                           </div>
                         </div>
                       );

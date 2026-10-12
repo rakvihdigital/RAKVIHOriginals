@@ -4,51 +4,146 @@
    + Category Filters, Marquee, Brand Carousel
    ============================================ */
 
-export function initScrollSequence() {
+/**
+ * Boots every scroll-driven effect on the homepage.
+ * Returns a cleanup function — call it when the page unmounts so listeners,
+ * render loops and pending frame downloads don't pile up across navigations
+ * (and React Strict Mode's double-mount doesn't run two engines on one canvas).
+ */
+export function initScrollSequence(): () => void {
     'use strict';
 
     // ─── CONFIGURATION ───
-    const LERP_FACTOR = 0.08;
-    const PRELOAD_BATCH = 20;
-    const PRELOAD_PRIORITY_COUNT = 50;
+    const LERP_FACTOR = 0.12;          // easing per 60fps frame (time-corrected for 120Hz screens)
+    const MAX_CONCURRENT_LOADS = 2;    // frames downloading at once, shared by all sequences
+    const NEAR_WINDOW_BEHIND = 6;      // frames behind the scroll position to fetch first
+    const NEAR_WINDOW_AHEAD = 12;      // frames ahead of the scroll position to fetch first
+    const COARSE_STEPS = [32]; // sparse previews for large scroll jumps
+    const START_LOADING_MARGIN = '50% 0px';   // start downloading a section ~1.5 screens before it
+
+    const abort = new AbortController();
+    const listen = (target, type, fn, opts = {}) =>
+        target.addEventListener(type, fn, { ...opts, signal: abort.signal });
+    const cleanups = [];
+    const sequences = [];
+
+    // ─── SHARED FRAME LOADER ───
+    // One queue for all sequences so the section on screen always gets bandwidth first.
+    let inflight = 0;
+
+    function pumpLoader() {
+        if (abort.signal.aborted) return;
+        while (inflight < MAX_CONCURRENT_LOADS) {
+            let best = null;
+            for (const seq of sequences) {
+                if (!seq.loadingStarted || seq.allRequested) continue;
+                if (!best || seq.loadPriority() > best.loadPriority()) best = seq;
+            }
+            if (!best) return;
+
+            const index = best.nextFrameToLoad();
+            if (index < 0) {
+                best.allRequested = true;
+                continue;
+            }
+
+            inflight++;
+            best.loadFrame(index).finally(() => {
+                inflight--;
+                pumpLoader();
+            });
+        }
+    }
 
     // ─── SCROLL SEQUENCE CLASS ───
     class ScrollSequence {
         constructor(config) {
             this.config = config;
-            this.state = {
-                images: new Array(config.totalFrames),
-                loadedCount: 0,
-                currentFrame: 0,
-                targetFrame: 0,
-                lerpedFrame: 0,
-                scrollProgress: 0,
-                canvas: document.getElementById(config.canvasId),
-                ctx: null,
-                heroSection: document.getElementById(config.sectionId),
-                heroContainer: null,
-                animating: false,
-                canvasWidth: 0,
-                canvasHeight: 0,
-            };
+            this.total = config.totalFrames;
+            this.images = new Array(this.total);
+            this.requested = new Uint8Array(this.total);
+            this.loadOrder = buildLoadOrder(this.total);
+            this.loadOrderPos = 0;
+            this.loadingStarted = false;
+            this.allRequested = false;
 
-            if (!this.state.canvas || !this.state.heroSection) return;
+            this.targetFrame = 0;
+            this.lerpedFrame = 0;
+            this.drawnIndex = -1;
+            this.lastTextFrame = -1;
+            this.lastCounterNum = 0;
+            this.isVisible = false;
+            this.isNear = false;
+            this.rafId = 0;
+            this.lastTime = 0;
 
-            this.state.ctx = this.state.canvas.getContext('2d', { alpha: false });
-            this.state.heroContainer = this.state.heroSection.querySelector('.hero-scroll-container');
+            this.canvas = document.getElementById(config.canvasId);
+            this.section = document.getElementById(config.sectionId);
+            if (!this.canvas || !this.section) return;
+
+            this.container = this.section.querySelector('.hero-scroll-container');
+            this.ctx = this.canvas.getContext('2d', { alpha: false });
+            this.counterEl = this.section.querySelector('.hero-counter .counter-current');
+            this.indicatorEl = config.isMain ? this.section.querySelector('.scroll-indicator') : null;
+            this.overlays = this.buildOverlays();
 
             this.resizeCanvas = this.resizeCanvas.bind(this);
             this.onScroll = this.onScroll.bind(this);
             this.renderLoop = this.renderLoop.bind(this);
 
             this.resizeCanvas();
-            this.preloadImages();
-            this.setupScrollListener();
+            listen(window, 'resize', debounce(this.resizeCanvas, 150));
+            listen(window, 'scroll', this.onScroll, { passive: true });
+            this.onScroll();
             this.updateHeroText(0);
+            this.observeViewport();
 
-            window.addEventListener('resize', debounce(this.resizeCanvas, 200));
-            this.state.animating = true;
-            requestAnimationFrame(this.renderLoop);
+            if (config.isMain) this.startLoading();
+            sequences.push(this);
+        }
+
+        // ─── VIEWPORT TRACKING ───
+        observeViewport() {
+            // Visible → render loop runs. Off-screen sections cost nothing per frame.
+            const visibleObserver = new IntersectionObserver((entries) => {
+                this.isVisible = entries[0].isIntersecting;
+                if (this.isVisible) {
+                    this.onScroll();
+                    this.lerpedFrame = this.targetFrame; // jump straight to the right frame on entry
+                    this.drawFrame(this.lerpedFrame, true);
+                    this.updateHeroText(this.lerpedFrame);
+                    this.startRenderLoop();
+                }
+                pumpLoader();
+            });
+            visibleObserver.observe(this.container);
+
+            // Near the viewport → start downloading this section's frames.
+            const nearObserver = new IntersectionObserver((entries) => {
+                this.isNear = entries[0].isIntersecting;
+                if (this.isNear) this.startLoading();
+                pumpLoader();
+            }, { rootMargin: START_LOADING_MARGIN });
+            nearObserver.observe(this.container);
+
+            cleanups.push(() => {
+                visibleObserver.disconnect();
+                nearObserver.disconnect();
+                cancelAnimationFrame(this.rafId);
+                this.images.length = 0;
+            });
+        }
+
+        startLoading() {
+            if (this.loadingStarted) return;
+            this.loadingStarted = true;
+            pumpLoader();
+        }
+
+        loadPriority() {
+            if (this.isVisible) return 3;
+            if (this.isNear) return 2;
+            return this.config.isMain ? 1 : 0;
         }
 
         // ─── CANVAS RESIZE ───
@@ -56,203 +151,220 @@ export function initScrollSequence() {
             const dpr = Math.min(window.devicePixelRatio || 1, 2);
             const width = window.innerWidth;
             const height = window.innerHeight;
+            if (width === this.canvasWidth && height === this.canvasHeight) return;
 
-            this.state.canvas.width = width * dpr;
-            this.state.canvas.height = height * dpr;
-            this.state.canvas.style.width = width + 'px';
-            this.state.canvas.style.height = height + 'px';
-            this.state.ctx.scale(dpr, dpr);
+            this.canvas.width = Math.round(width * dpr);
+            this.canvas.height = Math.round(height * dpr);
+            this.canvas.style.width = width + 'px';
+            this.canvas.style.height = height + 'px';
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-            this.state.canvasWidth = width;
-            this.state.canvasHeight = height;
-            this.drawFrame(Math.round(this.state.lerpedFrame));
+            this.canvasWidth = width;
+            this.canvasHeight = height;
+            this.drawFrame(this.lerpedFrame, true);
         }
 
-        // ─── IMAGE PRELOADING ───
-        preloadImages() {
-            const priorityPromises = [];
-            for (let i = 0; i < PRELOAD_PRIORITY_COUNT && i < this.config.totalFrames; i++) {
-                priorityPromises.push(this.loadImage(i));
+        // ─── FRAME LOADING ───
+        // Fetch nearby frames first, then sparse previews for large scroll jumps.
+        // Remaining frames load as the visitor scrolls, leaving bandwidth for products.
+        nextFrameToLoad() {
+            const center = Math.round(this.targetFrame);
+            for (let d = 0; d <= NEAR_WINDOW_AHEAD; d++) {
+                const ahead = center + d;
+                if (ahead < this.total && !this.requested[ahead]) return ahead;
+                const behind = center - d;
+                if (d <= NEAR_WINDOW_BEHIND && behind >= 0 && !this.requested[behind]) return behind;
             }
-            Promise.all(priorityPromises).then(() => {
-                this.loadRemainingImages(PRELOAD_PRIORITY_COUNT);
-            });
+            while (this.loadOrderPos < this.loadOrder.length) {
+                const index = this.loadOrder[this.loadOrderPos++];
+                if (!this.requested[index]) return index;
+            }
+            return -1;
         }
 
-        loadImage(index) {
+        loadFrame(index) {
+            this.requested[index] = 1;
             return new Promise((resolve) => {
-                if (this.state.images[index]) { resolve(); return; }
                 const img = new Image();
+                img.decoding = 'async';
                 const frameNum = String(index + 1).padStart(3, '0');
                 img.src = this.config.framePath + frameNum + this.config.frameExt;
-                img.onload = () => {
-                    this.state.images[index] = img;
-                    this.state.loadedCount++;
-                    if (index === 0 && this.state.lerpedFrame < 1) {
-                        this.drawFrame(0);
+
+                const ready = () => {
+                    if (abort.signal.aborted) return resolve();
+                    this.images[index] = img;
+                    // Paint the first frame right away; afterwards only repaint on-screen
+                    // sections when this frame is closer to the scroll position than what's shown
+                    const want = Math.round(this.lerpedFrame);
+                    if (this.drawnIndex < 0 ||
+                        (this.isVisible && Math.abs(index - want) < Math.abs(this.drawnIndex - want))) {
+                        this.drawFrame(this.lerpedFrame, true);
                     }
                     resolve();
                 };
-                img.onerror = () => resolve();
+                // decode() keeps the expensive image decode off the scroll path
+                img.decode().then(ready, () => {
+                    if (img.complete && img.naturalWidth) ready();
+                    else resolve();
+                });
             });
         }
 
-        loadRemainingImages(startIndex) {
-            let i = startIndex;
-            const loadBatch = () => {
-                const batchEnd = Math.min(i + PRELOAD_BATCH, this.config.totalFrames);
-                const promises = [];
-                for (; i < batchEnd; i++) {
-                    if (!this.state.images[i]) promises.push(this.loadImage(i));
-                }
-                if (i < this.config.totalFrames) {
-                    Promise.all(promises).then(() => {
-                        if ('requestIdleCallback' in window) {
-                            requestIdleCallback(loadBatch, { timeout: 1000 });
-                        } else {
-                            setTimeout(loadBatch, 100);
-                        }
-                    });
-                }
-            };
-            loadBatch();
+        // Closest loaded frame to the requested index (never leaves the canvas stuck)
+        nearestLoaded(index) {
+            if (this.images[index]) return index;
+            for (let d = 1; d < this.total; d++) {
+                const before = index - d;
+                const after = index + d;
+                if (before >= 0 && this.images[before]) return before;
+                if (after < this.total && this.images[after]) return after;
+                if (before < 0 && after >= this.total) break;
+            }
+            return -1;
         }
 
         // ─── FRAME DRAWING ───
-        drawFrame(frameIndex) {
-            const idx = Math.max(0, Math.min(this.config.totalFrames - 1, Math.round(frameIndex)));
-            const img = this.state.images[idx];
-            if (!img) return;
+        drawFrame(frame, force = false) {
+            const wanted = Math.max(0, Math.min(this.total - 1, Math.round(frame)));
+            const idx = this.nearestLoaded(wanted);
+            if (idx < 0 || (!force && idx === this.drawnIndex)) return;
 
-            const ctx = this.state.ctx;
-            const cw = this.state.canvasWidth;
-            const ch = this.state.canvasHeight;
+            const img = this.images[idx];
+            const cw = this.canvasWidth;
+            const ch = this.canvasHeight;
             const iw = img.naturalWidth;
             const ih = img.naturalHeight;
             const scale = Math.max(cw / iw, ch / ih);
             const w = iw * scale;
             const h = ih * scale;
-            const x = (cw - w) / 2;
-            const y = (ch - h) / 2;
 
-            ctx.clearRect(0, 0, cw, ch);
-            ctx.drawImage(img, x, y, w, h);
-
-            this.state.currentFrame = idx;
+            this.ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+            this.drawnIndex = idx;
         }
 
         // ─── SCROLL HANDLING ───
-        setupScrollListener() {
-            window.addEventListener('scroll', this.onScroll, { passive: true });
-            this.onScroll();
-        }
-
         onScroll() {
-            const heroRect = this.state.heroContainer.getBoundingClientRect();
-            const heroTop = -heroRect.top;
-            const heroHeight = heroRect.height - window.innerHeight;
+            if (!this.container) return;
+            const rect = this.container.getBoundingClientRect();
+            const scrolled = -rect.top;
+            const effectiveHeight = (rect.height - window.innerHeight) * 0.98;
+            const progress = effectiveHeight > 0 ? clamp(scrolled / effectiveHeight, 0, 1) : 0;
 
-            const effectiveHeight = heroHeight * 0.98;
+            this.targetFrame = progress * (this.total - 1);
 
-            if (heroTop < 0) {
-                this.state.scrollProgress = 0;
-            } else if (heroTop > effectiveHeight) {
-                this.state.scrollProgress = 1;
-            } else {
-                this.state.scrollProgress = heroTop / effectiveHeight;
+            if (this.indicatorEl) this.indicatorEl.classList.toggle('hidden', progress > 0.02);
+            this.updateHeroCounter(progress);
+            if (this.isVisible) {
+                // New scroll position → frames around it may still need fetching
+                this.allRequested = false;
+                pumpLoader();
             }
-
-            this.state.targetFrame = this.state.scrollProgress * (this.config.totalFrames - 1);
-            if (this.config.isMain) {
-                this.updateScrollIndicator(this.state.scrollProgress);
-            }
-            this.updateHeroCounter(this.state.scrollProgress);
         }
 
         // ─── RENDER LOOP ───
-        renderLoop() {
-            if (!this.state.animating) return;
-            const diff = this.state.targetFrame - this.state.lerpedFrame;
-            if (Math.abs(diff) > 0.1) {
-                this.state.lerpedFrame += diff * LERP_FACTOR;
-                this.drawFrame(this.state.lerpedFrame);
-            } else if (Math.abs(diff) > 0.01) {
-                this.state.lerpedFrame = this.state.targetFrame;
-                this.drawFrame(this.state.lerpedFrame);
+        startRenderLoop() {
+            if (this.rafId) return;
+            this.lastTime = performance.now();
+            this.rafId = requestAnimationFrame(this.renderLoop);
+        }
+
+        renderLoop(now) {
+            if (abort.signal.aborted || !this.isVisible) {
+                this.rafId = 0;
+                return;
             }
 
-            this.updateHeroText(this.state.lerpedFrame);
+            const dt = Math.min(now - this.lastTime, 100);
+            this.lastTime = now;
 
-            requestAnimationFrame(this.renderLoop);
+            const diff = this.targetFrame - this.lerpedFrame;
+            if (Math.abs(diff) > 0.05) {
+                // Frame-rate independent easing: same feel at 60Hz and 120Hz
+                const t = 1 - Math.pow(1 - LERP_FACTOR, dt / 16.667);
+                this.lerpedFrame += diff * t;
+            } else {
+                this.lerpedFrame = this.targetFrame;
+            }
+
+            this.drawFrame(this.lerpedFrame);
+            if (Math.abs(this.lerpedFrame - this.lastTextFrame) > 0.01) {
+                this.updateHeroText(this.lerpedFrame);
+            }
+
+            this.rafId = requestAnimationFrame(this.renderLoop);
         }
 
         // ─── HERO TEXT OVERLAYS ───
-        updateHeroText(frame) {
-            const overlays = this.state.heroSection.querySelectorAll('.hero-text-overlay');
-
-            overlays.forEach((overlay) => {
-                let opacity = 0;
-                let translateY = 30;
-                let blur = 4;
-                let scale = 0.97;
+        // Timing for each overlay is computed once instead of on every animation frame.
+        buildOverlays() {
+            const last = this.total - 1;
+            return Array.from(this.section.querySelectorAll('.hero-text-overlay')).map((el) => {
+                const isFirst = el.classList.contains('text-first') ||
+                                (el.id && el.id.endsWith('-text-1')) ||
+                                el.id === 'hero-text-1';
+                const isLast = el.classList.contains('text-last') ||
+                               (el.id && el.id.endsWith('-text-6')) ||
+                               el.id === 'hero-text-6';
 
                 let startFrame = 0;
                 let endFrame = 0;
                 let fadeInFrames = 3;
                 let fadeOutFrames = 3;
 
-                const isFirst = overlay.classList.contains('text-first') || 
-                                (overlay.id && overlay.id.endsWith('-text-1')) || 
-                                overlay.id === 'hero-text-1';
-
-                const isLast = overlay.classList.contains('text-last') || 
-                               (overlay.id && overlay.id.endsWith('-text-6')) || 
-                               overlay.id === 'hero-text-6';
-
                 if (isFirst) {
                     startFrame = 0;
-                    fadeInFrames = 0; // ZERO delay/fade-in! 100% visible immediately at frame 0 and frame 1!
+                    fadeInFrames = 0; // fully visible immediately at frame 0
                     if (this.config.isMain) {
-                        endFrame = 0.10 * (this.config.totalFrames - 1);
+                        endFrame = 0.10 * last;
                         fadeOutFrames = 12;
                     } else {
-                        endFrame = 0.12 * (this.config.totalFrames - 1);
+                        endFrame = 0.12 * last;
                         fadeOutFrames = 8;
                     }
                 } else if (isLast) {
-                    if (this.config.isMain) {
-                        // Original hero: appears at 86% so it has plenty of time to shine until the end
-                        startFrame = 0.86 * (this.config.totalFrames - 1);
-                    } else {
-                        // New sections: appear at 80% progress so there's plenty of time
-                        startFrame = 0.80 * (this.config.totalFrames - 1);
-                    }
-                    endFrame = this.config.totalFrames + 10; // never ends
+                    // Main hero: appears at 86%; other sections at 80% so there's time to read it
+                    startFrame = (this.config.isMain ? 0.86 : 0.80) * last;
+                    endFrame = this.total + 10; // never ends
                     fadeOutFrames = 0;
                     fadeInFrames = 8;
-                } else if (overlay.dataset.start && overlay.dataset.end) {
-                    const pStart = parseFloat(overlay.dataset.start);
-                    const pEnd = parseFloat(overlay.dataset.end);
-                    startFrame = pStart * (this.config.totalFrames - 1);
-                    endFrame = pEnd * (this.config.totalFrames - 1);
-                    fadeInFrames = 0.03 * (this.config.totalFrames - 1);
-                    fadeOutFrames = 0.03 * (this.config.totalFrames - 1);
+                } else if (el.dataset.start && el.dataset.end) {
+                    startFrame = parseFloat(el.dataset.start) * last;
+                    endFrame = parseFloat(el.dataset.end) * last;
+                    fadeInFrames = 0.03 * last;
+                    fadeOutFrames = 0.03 * last;
                 }
 
-                if (frame >= startFrame && frame <= endFrame) {
-                    const fadeInEnd = startFrame + fadeInFrames;
-                    const fadeOutStart = endFrame - fadeOutFrames;
+                return {
+                    el, isFirst, isLast, startFrame, endFrame, fadeInFrames, fadeOutFrames,
+                    hasLink: Boolean(el.querySelector('a')),
+                    lastOpacity: -1,
+                };
+            });
+        }
 
-                    if (fadeInFrames > 0 && frame < fadeInEnd) {
-                        const t = easeOutCubic((frame - startFrame) / fadeInFrames);
+        updateHeroText(frame) {
+            this.lastTextFrame = frame;
+
+            for (const o of this.overlays) {
+                let opacity = 0;
+                let translateY = 30;
+                let blur = 4;
+                let scale = 0.97;
+
+                if (frame >= o.startFrame && frame <= o.endFrame) {
+                    const fadeInEnd = o.startFrame + o.fadeInFrames;
+                    const fadeOutStart = o.endFrame - o.fadeOutFrames;
+
+                    if (o.fadeInFrames > 0 && frame < fadeInEnd) {
+                        const t = easeOutCubic((frame - o.startFrame) / o.fadeInFrames);
                         opacity = t;
                         translateY = 30 * (1 - t);
                         blur = 4 * (1 - t);
                         scale = 0.97 + 0.03 * t;
-                    } else if (frame <= fadeOutStart || fadeOutFrames === 0) {
+                    } else if (frame <= fadeOutStart || o.fadeOutFrames === 0) {
                         opacity = 1; translateY = 0; blur = 0; scale = 1;
                     } else {
-                        const t = easeOutCubic((frame - fadeOutStart) / fadeOutFrames);
+                        const t = easeOutCubic((frame - fadeOutStart) / o.fadeOutFrames);
                         opacity = 1 - t;
                         translateY = -20 * t;
                         blur = 4 * t;
@@ -260,21 +372,22 @@ export function initScrollSequence() {
                     }
                 }
 
-                const pointerEvents = (opacity > 0.1 && (isFirst || isLast || overlay.querySelector('a'))) ? 'auto' : 'none';
-                overlay.style.opacity = String(opacity);
-                overlay.style.transform = `translateY(${translateY}px) scale(${scale})`;
-                overlay.style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
-                overlay.style.pointerEvents = pointerEvents;
-                overlay.style.willChange = opacity > 0 ? 'transform, opacity, filter' : 'auto';
-            });
+                // Hidden and still hidden → nothing to write
+                if (opacity === 0 && o.lastOpacity === 0) continue;
+                o.lastOpacity = opacity;
+
+                const style = o.el.style;
+                style.opacity = String(opacity);
+                style.transform = `translateY(${translateY}px) scale(${scale})`;
+                style.filter = blur > 0.05 ? `blur(${blur}px)` : 'none';
+                style.pointerEvents = (opacity > 0.1 && (o.isFirst || o.isLast || o.hasLink)) ? 'auto' : 'none';
+                style.willChange = opacity > 0 ? 'transform, opacity, filter' : 'auto';
+            }
         }
 
         // ─── HERO COUNTER ───
         updateHeroCounter(progress) {
-            const counter = this.state.heroSection.querySelector('.hero-counter');
-            if (!counter) return;
-            const currentEl = counter.querySelector('.counter-current');
-            if (!currentEl) return;
+            if (!this.counterEl) return;
 
             let num = 1;
             if (this.config.isMain) {
@@ -292,19 +405,25 @@ export function initScrollSequence() {
                 else if (progress >= 0.30) num = 3;
                 else if (progress >= 0.15) num = 2;
             }
-            currentEl.textContent = '0' + num;
+            if (num === this.lastCounterNum) return;
+            this.lastCounterNum = num;
+            this.counterEl.textContent = '0' + num;
         }
+    }
 
-        // ─── SCROLL INDICATOR ───
-        updateScrollIndicator(progress) {
-            const indicator = this.state.heroSection.querySelector('.scroll-indicator');
-            if (!indicator) return;
-            if (progress > 0.02) {
-                indicator.classList.add('hidden');
-            } else {
-                indicator.classList.remove('hidden');
+    function buildLoadOrder(total) {
+        const seen = new Uint8Array(total);
+        const order = [];
+        for (const step of COARSE_STEPS) {
+            for (let i = 0; i < total; i += step) {
+                if (!seen[i]) {
+                    seen[i] = 1;
+                    order.push(i);
+                }
             }
         }
+        if (!seen[total - 1]) order.push(total - 1);
+        return order;
     }
 
     // ─── INIT ───
@@ -382,13 +501,13 @@ export function initScrollSequence() {
         const introOverlay = document.getElementById('intro-overlay');
         if (introOverlay) {
             if (window.scrollY > 50) introOverlay.classList.add('is-scrolled');
-            window.addEventListener('scroll', () => {
+            listen(window, 'scroll', () => {
                 if (window.scrollY > 50) {
                     introOverlay.classList.add('is-scrolled');
                 } else {
                     introOverlay.classList.remove('is-scrolled');
                 }
-            });
+            }, { passive: true });
         }
     }
 
@@ -405,116 +524,14 @@ export function initScrollSequence() {
                 });
             }, { rootMargin: '0px 0px -60px 0px', threshold: 0.1 });
             revealElements.forEach((el) => observer.observe(el));
+            cleanups.push(() => observer.disconnect());
         } else {
             revealElements.forEach((el) => el.classList.add('revealed'));
         }
     }
 
-    // ─── 3D PRODUCT CARD TRANSITION ───
-    let transitionElements = null;
-
-    function setup3DTransition() {
-        transitionElements = {
-            heroContainer: document.querySelector('.hero-scroll-container'),
-            canvas: document.getElementById('hero-canvas'),
-            flyingHandbag: document.getElementById('flying-handbag'),
-            flyingImg: document.getElementById('flying-handbag-img'),
-            landingCard: document.getElementById('landing-card'),
-            landingImg: document.getElementById('landing-card-img')
-        };
-    }
-
-    function update3DTransition(mainState) {
-        if (!transitionElements || !transitionElements.landingCard) return;
-
-        const heroRect = transitionElements.heroContainer.getBoundingClientRect();
-        const heroBottom = heroRect.bottom;
-
-        // We calculate scroll past the hero container
-        const scrollPastHero = window.innerHeight - heroBottom;
-
-        if (scrollPastHero <= 0) {
-            // Still in the hero section, hide flying handbag
-            transitionElements.flyingHandbag.style.opacity = '0';
-            transitionElements.flyingHandbag.style.pointerEvents = 'none';
-            transitionElements.canvas.style.opacity = '1';
-            transitionElements.landingImg.style.opacity = '0';
-            return;
-        }
-
-        // We have scrolled past the hero. 
-        // Transition happens over ~80vh of scrolling distance.
-        const transitionDistance = window.innerHeight * 0.8;
-        let tProgress = clamp(scrollPastHero / transitionDistance, 0, 1);
-
-        // Easing for smooth cinematic movement
-        const easedProgress = easeInOutCubic(tProgress);
-
-        if (tProgress >= 1) {
-            // Transition complete: show the image in the real product card
-            transitionElements.flyingHandbag.style.opacity = '0';
-            transitionElements.landingImg.style.opacity = '1';
-            return;
-        }
-
-        // Active transition: Hide canvas and landing image, show flying overlay
-        transitionElements.canvas.style.opacity = '0';
-        transitionElements.landingImg.style.opacity = '0';
-        transitionElements.flyingHandbag.style.opacity = '1';
-
-        // 1. Calculate the starting rect (where the canvas drew the image in the viewport)
-        const img = mainState.images[Math.round(mainState.lerpedFrame)] || mainState.images[mainState.images.length - 1];
-        if (!img) return;
-
-        const cw = mainState.canvasWidth;
-        const ch = mainState.canvasHeight;
-        const iw = img.naturalWidth;
-        const ih = img.naturalHeight;
-        const scale = Math.max(cw / iw, ch / ih);
-        const startW = iw * scale;
-        const startH = ih * scale;
-        const startX = (cw - startW) / 2;
-        const startY = (ch - startH) / 2;
-
-        // 2. Calculate the target rect (current viewport position of the landing card image slot)
-        const targetRect = transitionElements.landingImg.parentElement.getBoundingClientRect();
-
-        // 3. Interpolate position and size
-        const currentX = startX + (targetRect.left - startX) * easedProgress;
-        const currentY = startY + (targetRect.top - startY) * easedProgress;
-        const currentW = startW + (targetRect.width - startW) * easedProgress;
-        const currentH = startH + (targetRect.height - startH) * easedProgress;
-
-        // 4. Add subtle 3D cinematic rotation during flight
-        const rotatePhase = Math.sin(easedProgress * Math.PI);
-        const rotateX = rotatePhase * 8;
-        const rotateY = rotatePhase * -4;
-        const rotateZ = rotatePhase * 1.5;
-
-        // Apply transforms
-        transitionElements.flyingHandbag.style.cssText = `
-            opacity: 1;
-            transform: perspective(1200px) translate3d(${currentX}px, ${currentY}px, 0) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg);
-            width: ${currentW}px;
-            height: ${currentH}px;
-            will-change: transform, width, height;
-        `;
-
-        // Also ensure the flying image perfectly fills its container
-        transitionElements.flyingImg.style.cssText = `
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: ${easedProgress * 24}px;
-        `;
-    }
-
     function clamp(val, min, max) {
         return Math.min(max, Math.max(min, val));
-    }
-
-    function easeInOutCubic(t) {
-        return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
     }
 
     // ─── CATEGORY FILTERS ───
@@ -523,7 +540,7 @@ export function initScrollSequence() {
         const cards = document.querySelectorAll('.category-card');
 
         buttons.forEach((btn) => {
-            btn.addEventListener('click', () => {
+            listen(btn, 'click', () => {
                 // Update active button
                 buttons.forEach((b) => b.classList.remove('active'));
                 btn.classList.add('active');
@@ -558,10 +575,12 @@ export function initScrollSequence() {
 
         // Clone the cards for seamless loop
         const cards = Array.from(track.children);
-        cards.forEach((card) => {
+        const clones = cards.map((card) => {
             const clone = card.cloneNode(true);
             track.appendChild(clone);
+            return clone;
         });
+        cleanups.push(() => clones.forEach((clone) => clone.remove()));
     }
 
     // ─── WORLD'S MOST LOVED (ARC GALLERY) ───
@@ -576,7 +595,7 @@ export function initScrollSequence() {
         const outerRight = arcContainer.querySelector('.arc-outer-right');
 
         // Scroll listener for the arc parallax
-        window.addEventListener('scroll', () => {
+        listen(window, 'scroll', () => {
             const rect = arcContainer.getBoundingClientRect();
             // Visible when top is less than window height and bottom is greater than 0
             if (rect.top < window.innerHeight && rect.bottom > 0) {
@@ -594,13 +613,14 @@ export function initScrollSequence() {
                     if (outerRight) outerRight.style.transform = `translate3d(620px, ${100 + scrollVal * -40}px, -100px) rotate(${10 - scrollVal * 4}deg)`;
                 }
             }
-        });
+        }, { passive: true });
     }
 
     // ─── GLOBAL SCROLL PARALLAX ───
     function setupScrollParallax() {
         const floaters = document.querySelectorAll('.hover-float-parent');
-        window.addEventListener('scroll', () => {
+        if (floaters.length === 0) return;
+        listen(window, 'scroll', () => {
             const viewportCenter = window.innerHeight / 2;
             floaters.forEach(el => {
                 // Only apply parallax if it has finished its reveal animation
@@ -615,7 +635,7 @@ export function initScrollSequence() {
                     }
                 }
             });
-        });
+        }, { passive: true });
     }
 
     // ─── QUALITY FIRST PHYSICAL ANIMATION ───
@@ -630,6 +650,7 @@ export function initScrollSequence() {
         if (!qualitySection || !cards[0]) return;
 
         if ('IntersectionObserver' in window) {
+            const timers = [];
             const observer = new IntersectionObserver((entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
@@ -637,15 +658,19 @@ export function initScrollSequence() {
                         cards.forEach(card => card.classList.add('play-quality-animation'));
 
                         // Precise timing for impacts based on CSS animation delays and duration
-                        setTimeout(() => triggerQualityCelebration(cards[0]), 940);
-                        setTimeout(() => triggerQualityCelebration(cards[1]), 1340);
-                        setTimeout(() => triggerQualityCelebration(cards[2]), 1740);
+                        timers.push(setTimeout(() => triggerQualityCelebration(cards[0]), 940));
+                        timers.push(setTimeout(() => triggerQualityCelebration(cards[1]), 1340));
+                        timers.push(setTimeout(() => triggerQualityCelebration(cards[2]), 1740));
 
                         observer.unobserve(qualitySection);
                     }
                 });
             }, { rootMargin: '0px 0px -100px 0px', threshold: 0.2 });
             observer.observe(qualitySection);
+            cleanups.push(() => {
+                observer.disconnect();
+                timers.forEach(clearTimeout);
+            });
         } else {
             cards.forEach(card => card.classList.add('play-quality-animation'));
         }
@@ -697,6 +722,7 @@ export function initScrollSequence() {
 
     function debounce(fn, delay) {
         let timer;
+        cleanups.push(() => clearTimeout(timer));
         return function (...args) {
             clearTimeout(timer);
             timer = setTimeout(() => fn.apply(this, args), delay);
@@ -705,8 +731,14 @@ export function initScrollSequence() {
 
     // ─── BOOT ───
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+        listen(document, 'DOMContentLoaded', init, { once: true });
     } else {
         init();
     }
+
+    return () => {
+        abort.abort();
+        cleanups.forEach((fn) => fn());
+        sequences.length = 0;
+    };
 }

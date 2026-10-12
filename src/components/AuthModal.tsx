@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import Image from "next/image";
 import bcrypt from "bcryptjs";
 import { createClient } from "@/lib/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -240,37 +241,18 @@ export default function AuthModal({
         </button>
 
         {/* Clean Brand Header */}
-        <div style={{ textAlign: "center", marginBottom: "1.75rem" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "48px",
-              height: "48px",
-              borderRadius: "14px",
-              background: "linear-gradient(135deg, rgba(212, 175, 55, 0.16) 0%, rgba(212, 175, 55, 0.02) 100%)",
-              border: "1px solid rgba(212, 175, 55, 0.35)",
-              color: "#d4af37",
-              marginBottom: "0.75rem",
-              boxShadow: "0 0 20px rgba(212, 175, 55, 0.1)",
-            }}
-          >
-            <Gem size={22} strokeWidth={1.75} />
-          </div>
-          <h2
-            style={{
-              margin: 0,
-              fontSize: "1.15rem",
-              letterSpacing: "0.18em",
-              textTransform: "uppercase",
-              fontWeight: 800,
-              color: "#ffffff",
-              fontFamily: "var(--font-heading, serif)",
-            }}
-          >
-            RAKVIH ORIGINALS
-          </h2>
+        <div style={{ textAlign: "center", marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Image
+            src="/rakvih-logo.png"
+            alt="RAKVIH Originals"
+            width={200}
+            height={25}
+            priority
+            style={{ height: "26px", width: "auto", objectFit: "contain", marginBottom: "8px" }}
+          />
+          <span style={{ fontSize: "0.7rem", letterSpacing: "0.22em", textTransform: "uppercase", color: "var(--color-gold)", fontWeight: 600 }}>
+            Private Client Portal
+          </span>
         </div>
 
         {/* Tab Toggle */}

@@ -113,7 +113,7 @@ export default function ContactPage() {
           </div>
 
           {/* Form & Locations Grid */}
-          <div className="contact-main-grid" style={{ marginTop: "5rem" }}>
+          <div className="contact-main-grid" style={{ marginTop: "3rem" }}>
             {/* Contact Form */}
             <div className="contact-form-card">
               <span className="accent-label">Get in Touch</span>
@@ -288,7 +288,7 @@ export default function ContactPage() {
           </div>
 
           {/* Frequently Asked Questions */}
-          <div className="contact-faqs-section" style={{ marginTop: "6rem" }}>
+          <div className="contact-faqs-section" style={{ marginTop: "3rem" }}>
             <div className="about-pillars-header">
               <span className="accent-label">Assistance</span>
               <h2>Frequently Asked Questions</h2>

@@ -72,7 +72,7 @@ export default function AboutPage() {
           </div>
 
           {/* Story & Vision Split */}
-          <div className="story-split-grid" style={{ marginTop: "5rem" }}>
+          <div className="story-split-grid" style={{ marginTop: "3rem" }}>
             <div className="story-text-card">
               <span className="accent-label">Vision & Philosophy</span>
               <h2>A Sanctuary of Permanent Design</h2>
@@ -107,7 +107,7 @@ export default function AboutPage() {
           </div>
 
           {/* Global Presence Banner */}
-          <div className="subpage-ateliers-banner" style={{ marginTop: "6rem" }}>
+          <div className="subpage-ateliers-banner">
             <div className="ateliers-content">
               <span className="accent-label">Private Salons</span>
               <h2>Experience Our Private Viewings</h2>

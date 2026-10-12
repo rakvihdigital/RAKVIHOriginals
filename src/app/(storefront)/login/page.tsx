@@ -2,6 +2,7 @@
 
 import React, { useState, Suspense } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
@@ -119,10 +120,15 @@ function LoginFormContent() {
     <div className="auth-card-wrap">
       {/* Brand Header */}
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
-        <div style={{ marginBottom: "1rem" }}>
-          <span className="brand-text-layer" style={{ fontSize: "1.8rem" }}>
-            RAKVIH <span className="brand-sub-gold" style={{ fontSize: "0.85rem", marginLeft: "4px" }}>ORIGINALS</span>
-          </span>
+        <div style={{ marginBottom: "1.25rem", display: "flex", justifyContent: "center" }}>
+          <Image
+            src="/rakvih-logo.png"
+            alt="RAKVIH Originals"
+            width={240}
+            height={30}
+            priority
+            style={{ height: "32px", width: "auto", objectFit: "contain" }}
+          />
         </div>
         <h1 style={{ fontFamily: "var(--font-display)", fontSize: "1.8rem", color: "#ffffff", marginBottom: "0.5rem" }}>
           {activeTab === "signin" ? "Sign In To Your Vault" : "Create VIP Membership"}

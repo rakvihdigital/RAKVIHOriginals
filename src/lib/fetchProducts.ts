@@ -106,6 +106,7 @@ export const SUBCATEGORY_NAMES: Record<number, string> = {
   71: "Maison Backpacks",
   73: "Footwear - Luxury Runner",
   74: "Belts - The Hub",
+  75: "Stoles & Scarves",
 };
 
 export const ATTRIBUTE_SIZE_FALLBACKS: Record<number, string> = {
@@ -146,7 +147,7 @@ const CACHE_TTL_MS = 3 * 60 * 1000; // 3 minutes
 /**
  * Fetch all brands dynamically from Supabase (Cached in memory for instant speed)
  */
-export async function fetchBrands(): Promise<Record<number, string>> {
+async function loadBrands(): Promise<Record<number, string>> {
   if (cachedBrandMap) return cachedBrandMap;
   try {
     const { data, error } = await supabase
@@ -178,7 +179,7 @@ export async function fetchBrands(): Promise<Record<number, string>> {
 /**
  * Fetch all size & color attributes dynamically from Supabase (Cached in memory for instant speed)
  */
-export async function fetchAttributesMap(): Promise<Record<number, string>> {
+async function loadAttributesMap(): Promise<Record<number, string>> {
   if (cachedAttrMap) return cachedAttrMap;
   try {
     const { data, error } = await supabase
@@ -204,11 +205,40 @@ export async function fetchAttributesMap(): Promise<Record<number, string>> {
   }
 }
 
+// Share pending lookups across simultaneous category requests (including Strict Mode).
+let brandsRequest: Promise<Record<number, string>> | undefined;
+let attributesRequest: Promise<Record<number, string>> | undefined;
+export function fetchBrands(): Promise<Record<number, string>> {
+  return brandsRequest ??= loadBrands().finally(() => { brandsRequest = undefined; });
+}
+export function fetchAttributesMap(): Promise<Record<number, string>> {
+  return attributesRequest ??= loadAttributesMap().finally(() => { attributesRequest = undefined; });
+}
+
 /**
  * Formats a raw number to INR currency string (e.g. ₹14,999)
  */
 export function formatINR(val: number): string {
   return `₹${val.toLocaleString("en-IN")}`;
+}
+
+/**
+ * Store-wide discount applied to every product (0.15 = 15% OFF).
+ * Set to 0 to disable the offer.
+ */
+export const STORE_WIDE_DISCOUNT = 0.15;
+
+/**
+ * Returns the selling price after the store-wide discount.
+ * If the product already has a lower sale price in the DB, the better deal is kept.
+ */
+export function applyStoreDiscount(price: number, existingSalePrice: number | null): number {
+  if (!price || price <= 0) return 0;
+  const discounted = Math.round(price * (1 - STORE_WIDE_DISCOUNT));
+  if (existingSalePrice !== null && existingSalePrice > 0 && existingSalePrice < discounted) {
+    return existingSalePrice;
+  }
+  return discounted;
 }
 
 /**
@@ -243,8 +273,8 @@ export function determineProductGender(item: any): string {
 
   // 3. UNISEX Subcategories:
   // Sub 9 = Stoles, Sub 66 = Caps, Sub 43 = Charms, Sub 6 = Backpacks, Sub 8 = Sunglasses,
-  // Sub 10 = Slings & Laptop Bags, Sub 3 = Card/Passport, Sub 69 = Trolleys, Sub 70 = Unisex Slings, Sub 71 = Backpacks
-  if ([3, 6, 8, 9, 10, 43, 66, 69, 70, 71].includes(subId)) {
+  // Sub 10 = Slings & Laptop Bags, Sub 3 = Card/Passport, Sub 69 = Trolleys, Sub 70 = Unisex Slings, Sub 71 = Backpacks, Sub 75 = Stoles & Scarves
+  if ([3, 6, 8, 9, 10, 43, 66, 69, 70, 71, 75].includes(subId)) {
     if (dbGender === "Men" || dbGender === "Women") return dbGender;
     return "Unisex";
   }
@@ -297,7 +327,10 @@ export function mapRawProduct(
   if (item.product_variations && Array.isArray(item.product_variations)) {
     item.product_variations.forEach((v: any, vIdx: number) => {
       const p = Number(v.price) || 0;
-      const sp = v.sale_price ? Number(v.sale_price) : null;
+      const dbSalePrice = v.sale_price ? Number(v.sale_price) : null;
+      // Store-wide 15% discount applied on top of the regular price
+      const discountedPrice = applyStoreDiscount(p, dbSalePrice);
+      const sp = discountedPrice > 0 ? discountedPrice : null;
       const isVarSale = sp !== null && sp > 0 && sp < p;
       const effPrice = isVarSale ? sp! : p;
 
@@ -389,10 +422,11 @@ export function mapRawProduct(
 /**
  * Fetch real products by subcategory IDs from Supabase (Cached in memory for instant speed)
  */
-export async function fetchProductsBySubcategoryIds(
-  subcategoryIds: number[]
+async function loadProductsBySubcategoryIds(
+  subcategoryIds: number[],
+  limit?: number
 ): Promise<StoreProduct[]> {
-  const cacheKey = subcategoryIds.slice().sort().join(",");
+  const cacheKey = `${subcategoryIds.slice().sort().join(",")}:${limit ?? "all"}`;
   const cached = subcatProductsCache.get(cacheKey);
   if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
     return cached.data;
@@ -405,7 +439,6 @@ export async function fetchProductsBySubcategoryIds(
         id,
         name,
         sku,
-        description,
         brand_id,
         gender,
         subcategory_id,
@@ -426,7 +459,13 @@ export async function fetchProductsBySubcategoryIds(
       `)
       .in("subcategory_id", subcategoryIds)
       .eq("active", true)
-      .order("id", { ascending: false });
+      .order("id", { ascending: false })
+      // Cards need one photo; full galleries are fetched on the detail page.
+      .not("product_images.image_url", "imatch", "[.](mp4|mov|webm|m4v)($|[?])")
+      .order("id", { referencedTable: "product_images", ascending: true })
+      .limit(1, { referencedTable: "product_images" });
+
+    if (limit !== undefined) productsQuery.limit(limit);
 
     const [{ data: dbProducts, error }, brandMap, attrMap] = await Promise.all([
       productsQuery,
@@ -450,10 +489,21 @@ export async function fetchProductsBySubcategoryIds(
   }
 }
 
+const categoryRequests = new Map<string, Promise<StoreProduct[]>>();
+export function fetchProductsBySubcategoryIds(subcategoryIds: number[], limit?: number): Promise<StoreProduct[]> {
+  const key = `${subcategoryIds.slice().sort().join(",")}:${limit ?? "all"}`;
+  const pending = categoryRequests.get(key);
+  if (pending) return pending;
+  const request = loadProductsBySubcategoryIds(subcategoryIds, limit)
+    .finally(() => categoryRequests.delete(key));
+  categoryRequests.set(key, request);
+  return request;
+}
+
 /**
  * Fetch single product by ID with full variations and images
  */
-export async function fetchProductById(id: string | number): Promise<{
+export async function fetchProductById(id: string | number, onProduct?: (product: StoreProduct) => void): Promise<{
   product: StoreProduct | null;
   relatedProducts: StoreProduct[];
 }> {
@@ -463,6 +513,7 @@ export async function fetchProductById(id: string | number): Promise<{
       return { product: null, relatedProducts: [] };
     }
 
+    const lookups = Promise.all([fetchBrands(), fetchAttributesMap()]);
     const { data: item, error } = await supabase
       .from("products")
       .select(`
@@ -496,12 +547,9 @@ export async function fetchProductById(id: string | number): Promise<{
       return { product: null, relatedProducts: [] };
     }
 
-    const [brandMap, attrMap] = await Promise.all([
-      fetchBrands(),
-      fetchAttributesMap(),
-    ]);
-
+    const [brandMap, attrMap] = await lookups;
     const product = mapRawProduct(item, brandMap, attrMap);
+    onProduct?.(product);
 
     // Fetch up to 4 related products from the same subcategory
     let relatedProducts: StoreProduct[] = [];
@@ -608,10 +656,12 @@ export const ALL_COLLECTION_SUBCATEGORY_IDS = [
   12, 55,
   // Stoles
   9,
+  // The Original Hub (Handbags & Slings, Trolleys & Duffles, Slings & Laptop Bags, Backpacks, Footwear, Belts, Stoles & Scarves)
+  68, 69, 70, 71, 73, 74, 75,
 ];
 
 /**
- * Fetch all products across Handbags, Footwear, Belts, and Stoles for Collection Hub
+ * Fetch all products across Handbags, Footwear, Belts, Stoles, and The Original Hub for Collection Hub
  */
 export async function fetchAllCollectionProducts(): Promise<StoreProduct[]> {
   return fetchProductsBySubcategoryIds(ALL_COLLECTION_SUBCATEGORY_IDS);
@@ -629,10 +679,10 @@ export interface Homepage4Categories {
  */
 export async function fetchHomepage4CategoriesLatest(limitPerCategory: number = 6): Promise<Homepage4Categories> {
   const [handbags, footwear, belts, stoles] = await Promise.all([
-    fetchProductsBySubcategoryIds([7]),
-    fetchProductsBySubcategoryIds([1, 13]),
-    fetchProductsBySubcategoryIds([12, 55]),
-    fetchProductsBySubcategoryIds([9]),
+    fetchProductsBySubcategoryIds([7], limitPerCategory),
+    fetchProductsBySubcategoryIds([1, 13], limitPerCategory),
+    fetchProductsBySubcategoryIds([12, 55], limitPerCategory),
+    fetchProductsBySubcategoryIds([9], limitPerCategory),
   ]);
 
   return {

@@ -35,18 +35,25 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   const [authOpen, setAuthOpen] = useState(false);
 
   useEffect(() => {
+    let cancelled = false;
     async function loadProduct() {
       setIsLoading(true);
-      const { product: prod, relatedProducts: related } = await fetchProductById(id);
-      setProduct(prod);
-      setRelatedProducts(related);
-      if (prod?.variants && prod.variants.length > 0) {
+      setRelatedProducts([]);
+      const showProduct = (prod: StoreProduct) => {
+        if (cancelled) return;
+        setProduct(prod);
         setSelectedVariant(prod.variants[0]);
-      }
-      setSelectedImgIdx(0);
+        setSelectedImgIdx(0);
+        setIsLoading(false);
+      };
+      const { product: prod, relatedProducts: related } = await fetchProductById(id, showProduct);
+      if (cancelled) return;
+      if (!prod) setProduct(null);
+      setRelatedProducts(related);
       setIsLoading(false);
     }
     loadProduct();
+    return () => { cancelled = true; };
   }, [id]);
 
   if (isLoading) {
@@ -65,7 +72,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
   if (!product) {
     return (
       <main className="subpage-wrapper">
-        <div className="subpage-container" style={{ padding: "8rem 0", textAlign: "center" }}>
+        <div className="subpage-container" style={{ padding: "4rem 0", textAlign: "center" }}>
           <h1 style={{ fontFamily: "var(--font-display)", fontSize: "2.5rem", color: "#ffffff", marginBottom: "1rem" }}>
             Masterpiece Not Found
           </h1>
@@ -73,7 +80,7 @@ export default function ProductDetailPage({ params }: ProductPageProps) {
             The requested creation is either unavailable or has been archived from our salon.
           </p>
           <Link href="/collection-hub" className="hero-cta-pill">
-            Explore Collection Hub
+            Explore All Collections
           </Link>
         </div>
       </main>

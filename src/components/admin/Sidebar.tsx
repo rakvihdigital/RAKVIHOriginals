@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ShoppingCart,
@@ -146,9 +147,14 @@ export default function Sidebar({ role, mobileOpen = false, onCloseMobile }: Sid
         {/* Header */}
         <div className="exec-sidebar-header">
           <div className="flex items-start justify-between">
-            <Link href="/admin/dashboard" className="exec-sidebar-badge">
-              <span className="exec-sidebar-badge-main">RAKVIH</span>
-              <span className="exec-sidebar-badge-sub">ORIGINALS</span>
+            <Link href="/admin/dashboard" className="exec-sidebar-badge" style={{ padding: "0.6rem 1.2rem" }}>
+              <Image
+                src="/rakvih-logo.png"
+                alt="RAKVIH Originals"
+                width={140}
+                height={18}
+                style={{ height: "18px", width: "auto", objectFit: "contain" }}
+              />
             </Link>
 
             <button onClick={onCloseMobile} className="exec-sidebar-close-btn lg:hidden">

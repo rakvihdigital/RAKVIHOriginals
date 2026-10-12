@@ -18,16 +18,16 @@ import {
   ArrowUpRight,
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { applyStoreDiscount } from "@/lib/fetchProducts";
 
 const ORDERS_TABLE = "Rakvih_orders";
 
-// Curated subcategories & hidden categories identical to Products page
+// Curated subcategories identical to Products page
 const CURATED_SUBCATS: Record<string, string[]> = {
   men: ["Belts", "Footwear"],
   women: ["Belts", "Footwear", "Hand Bags"],
   unisex: ["Stoles"],
 };
-const HIDDEN_CATEGORIES = ["the original hub"];
 
 function cleanImageUrl(raw: string | null | undefined): string {
   if (!raw) return "/handbag.webp";
@@ -123,7 +123,9 @@ export default function DashboardPage() {
         supabase.from("subcategories").select("id, name, category_id"),
       ]);
 
-      const categories = (catRes.data || []) as { id: number; name: string }[];
+      const categories = ((catRes.data || []) as { id: number; name: string }[]).filter(
+        (c) => c.name.trim().toLowerCase() !== "watches" && c.id !== 8
+      );
       const subcategories = (subcatRes.data || []) as { id: number; name: string; category_id: number | null }[];
 
       const nonCuratedVisibleIds: number[] = [];
@@ -131,8 +133,6 @@ export default function DashboardPage() {
 
       for (const cat of categories) {
         const catNameLower = cat.name.trim().toLowerCase();
-        if (HIDDEN_CATEGORIES.includes(catNameLower)) continue;
-
         const curatedSubs = CURATED_SUBCATS[catNameLower];
         if (!curatedSubs) {
           nonCuratedVisibleIds.push(cat.id);
@@ -164,7 +164,8 @@ export default function DashboardPage() {
       // 3. Count products matching the CURATED filter (~550-600)
       let countQuery = supabase
         .from("products")
-        .select("id", { count: "exact", head: true });
+        .select("id", { count: "exact", head: true })
+        .neq("category_id", 8);
 
       if (visibilityFilter) {
         countQuery = countQuery.or(visibilityFilter);
@@ -181,6 +182,7 @@ export default function DashboardPage() {
            product_variations ( id, price, sale_price, stock ),
            product_images ( id, image_url )`
         )
+        .neq("category_id", 8)
         .order("id", { ascending: false })
         .limit(6);
 
@@ -497,8 +499,13 @@ export default function DashboardPage() {
                 const img = cleanImageUrl(rawImg);
 
                 const variations = p.product_variations || [];
-                const prices = variations.map((v: any) => Number(v.sale_price ?? v.price ?? 0));
-                const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
+                const rawPrices = variations.map((v: any) => Number(v.price || 0));
+                const finalPrices = variations.map((v: any) =>
+                  applyStoreDiscount(Number(v.price || 0), v.sale_price ? Number(v.sale_price) : null)
+                );
+                const minFinal = finalPrices.length > 0 ? Math.min(...finalPrices) : 0;
+                const minRaw = rawPrices.length > 0 ? Math.min(...rawPrices) : 0;
+                const isDiscounted = minFinal > 0 && minFinal < minRaw;
                 const prodStock = variations.reduce(
                   (sum: number, v: any) => sum + (Number(v.stock) || 0),
                   0
@@ -520,8 +527,11 @@ export default function DashboardPage() {
                       <h4 className="dash-product-name">{p.name || "Untitled Piece"}</h4>
                       <div className="dash-product-meta">
                         <span className="dash-product-price">
-                          {minPrice > 0 ? `₹${formatNumber(minPrice)}` : "—"}
+                          {minFinal > 0 ? `₹${formatNumber(minFinal)}` : "—"}
                         </span>
+                        {isDiscounted && (
+                          <span className="dash-discount-pill">15% OFF</span>
+                        )}
                         <span className="dash-product-stock">Stock: {formatNumber(prodStock)}</span>
                       </div>
                     </div>

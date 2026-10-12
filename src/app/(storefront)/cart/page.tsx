@@ -38,7 +38,7 @@ export default function CartPage() {
           </div>
         </section>
 
-        <section style={{ padding: "5rem 0 8rem 0" }}>
+        <section style={{ padding: "3rem 0 4rem 0" }}>
           <div className="subpage-container" style={{ textAlign: "center", maxWidth: "550px", margin: "0 auto" }}>
             <div className="auth-card-wrap">
               <span className="brand-gold-badge" style={{ marginBottom: "1rem" }}>
@@ -103,7 +103,7 @@ export default function CartPage() {
                 Discover handcrafted luxury pieces across our collections.
               </p>
               <Link href="/collection-hub" className="hero-cta-pill">
-                Explore Collection Hub
+                Explore All Collections
               </Link>
             </div>
           ) : (

@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 
 const PORTAL_ROUTES = [
@@ -46,7 +47,7 @@ export default function Footer() {
 
   const quickLinks = [
     { name: "Home", href: "/" },
-    { name: "Collection Hub", href: "/collection-hub" },
+    { name: "All Collections", href: "/collection-hub" },
     { name: "About Us", href: "/about" },
     { name: "Contact Us", href: "/contact" },
     { name: "Privacy Policy", href: "/privacy-policy" },
@@ -61,6 +62,7 @@ export default function Footer() {
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
     { name: "Stoles", href: "/stoles" },
+    { name: "The Original Hub", href: "/original-hub" },
   ];
 
   return (
@@ -73,9 +75,14 @@ export default function Footer() {
         <div className="footer-main-grid">
           {/* Column 1: Brand Info & Socials */}
           <div className="footer-col brand-col">
-            <Link href="/" className="footer-brand-logo">
-              <span className="logo-main">RAKVIH</span>
-              <span className="logo-sub">ORIGINALS</span>
+            <Link href="/" className="footer-brand-logo" aria-label="RAKVIH Originals">
+              <Image
+                src="/rakvih-logo.png"
+                alt="RAKVIH Originals"
+                width={200}
+                height={25}
+                className="footer-brand-logo-img"
+              />
             </Link>
             <p className="footer-manifesto">
               Crafting permanent luxury objects where Italian artisanal mastery converges with modern architectural design.
@@ -182,18 +189,6 @@ export default function Footer() {
                   office@rakvih.in
                 </a>
               </div>
-
-              <div>
-                <span style={{ fontSize: "0.7rem", color: "var(--color-gold)", textTransform: "uppercase", letterSpacing: "0.1em", display: "block", fontWeight: 700 }}>
-                  Direct Helpline
-                </span>
-                <a
-                  href="tel:+918296392047"
-                  style={{ color: "#ffffff", textDecoration: "none" }}
-                >
-                  +91 82963 92047
-                </a>
-              </div>
             </div>
           </div>
         </div>
@@ -207,7 +202,7 @@ export default function Footer() {
             <Link href="/privacy-policy">Privacy Policy</Link>
             <Link href="/terms">Terms & Conditions</Link>
             <span style={{ display: "inline-flex", alignItems: "center", gap: "4px" }}>
-              <span style={{ color: "rgba(255, 255, 255, 0.45)" }}>Designed &Developed by :- </span>
+              <span style={{ color: "rgba(255, 255, 255, 0.45)" }}>Powered by :- </span>
               <a
                 href="https://rakvih.in/"
                 target="_blank"

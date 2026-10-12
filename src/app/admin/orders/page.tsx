@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { downloadOrderInvoice } from "@/lib/invoiceGenerator";
 
 /* =====================================================
    DATABASE CONFIGURATION
@@ -77,6 +78,19 @@ export default function AdminOrdersPage() {
   const [openOrders, setOpenOrders] = useState<Set<string>>(new Set());
   const [allExpanded, setAllExpanded] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState<string | null>(null);
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (order: Order) => {
+    try {
+      setDownloadingInvoiceId(order.id);
+      await downloadOrderInvoice(order);
+    } catch (err) {
+      console.error("Failed to generate invoice:", err);
+      alert("Could not generate invoice PDF. Please try again.");
+    } finally {
+      setDownloadingInvoiceId(null);
+    }
+  };
 
   /* ---------------------------------------------------
      FETCH ORDERS FROM Rakvih_orders
@@ -486,6 +500,36 @@ export default function AdminOrdersPage() {
                           <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)" }}>
                             {formattedDate}
                           </span>
+
+                          <button
+                            type="button"
+                            title="Download Official Tax Invoice PDF"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadInvoice(order);
+                            }}
+                            disabled={downloadingInvoiceId === order.id}
+                            style={{
+                              marginLeft: "auto",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "0.35rem",
+                              background: "rgba(196, 161, 116, 0.12)",
+                              border: "1px solid rgba(196, 161, 116, 0.35)",
+                              color: "var(--color-gold)",
+                              padding: "0.3rem 0.65rem",
+                              borderRadius: "6px",
+                              fontSize: "0.7rem",
+                              fontFamily: "var(--font-heading)",
+                              fontWeight: 700,
+                              cursor: downloadingInvoiceId === order.id ? "wait" : "pointer",
+                            }}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            {downloadingInvoiceId === order.id ? "Generating..." : "Invoice"}
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -555,8 +599,39 @@ export default function AdminOrdersPage() {
                             </select>
                           </div>
 
-                          <div style={{ marginLeft: "auto", fontSize: "0.78rem", color: "rgba(255,255,255,0.5)" }}>
-                            Method: <strong>{order.payment_method}</strong> ({order.payment_id})
+                          <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: "1rem", flexWrap: "wrap" }}>
+                            <div style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.5)" }}>
+                              Method: <strong>{order.payment_method}</strong> ({order.payment_id})
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDownloadInvoice(order);
+                              }}
+                              disabled={downloadingInvoiceId === order.id}
+                              style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: "0.45rem",
+                                background: "linear-gradient(135deg, rgba(196, 161, 116, 0.22) 0%, rgba(168, 139, 74, 0.15) 100%)",
+                                border: "1px solid rgba(196, 161, 116, 0.45)",
+                                color: "var(--color-gold)",
+                                padding: "0.45rem 0.95rem",
+                                borderRadius: "8px",
+                                fontSize: "0.75rem",
+                                fontFamily: "var(--font-heading)",
+                                fontWeight: 700,
+                                cursor: downloadingInvoiceId === order.id ? "wait" : "pointer",
+                                transition: "all 0.2s ease",
+                              }}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                              </svg>
+                              {downloadingInvoiceId === order.id ? "Generating PDF Invoice..." : "Download Official Invoice (PDF)"}
+                            </button>
                           </div>
                         </div>
 

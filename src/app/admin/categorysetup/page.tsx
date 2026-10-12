@@ -59,14 +59,6 @@ function getCuratedList(categoryName: string): string[] | null {
   return CURATED_SUBCATS[key] ?? null;
 }
 
-// Categories listed here are hidden entirely — the category row itself,
-// and every one of its subcategories / sub-subcategories, never render.
-const HIDDEN_CATEGORIES = ["the original hub"];
-
-function isHiddenCategory(categoryName: string): boolean {
-  return HIDDEN_CATEGORIES.includes(categoryName.trim().toLowerCase());
-}
-
 export default function CategorySetupPage() {
   const supabase = createClient();
 
@@ -104,8 +96,18 @@ export default function CategorySetupPage() {
     } else if (subSubRes.error) {
       setError(subSubRes.error.message);
     } else {
-      const cats = (catRes.data ?? []) as Category[];
-      const subs = (subRes.data ?? []) as Subcategory[];
+      const allCats = (catRes.data ?? []) as Category[];
+      const cats = allCats.filter(
+        (c) => c.name.trim().toLowerCase() !== "watches" && c.id !== 8
+      );
+      const excludedCatIds = new Set(
+        allCats
+          .filter((c) => c.name.trim().toLowerCase() === "watches" || c.id === 8)
+          .map((c) => c.id)
+      );
+      const subs = ((subRes.data ?? []) as Subcategory[]).filter(
+        (s) => !excludedCatIds.has(s.category_id)
+      );
       setCategories(cats);
       setSubcategories(subs);
       setSubSubcategories((subSubRes.data ?? []) as SubSubcategory[]);
@@ -160,10 +162,7 @@ export default function CategorySetupPage() {
   }, [subSubcategories]);
 
   const sortedCategories = useMemo(
-    () =>
-      [...categories]
-        .filter((c) => !isHiddenCategory(c.name))
-        .sort(byPriorityThenName),
+    () => [...categories].sort(byPriorityThenName),
     [categories]
   );
 
@@ -245,7 +244,6 @@ export default function CategorySetupPage() {
     let subs = 0;
     let subsubs = 0;
     for (const cat of categories) {
-      if (isHiddenCategory(cat.name)) continue;
       const visibleSubs = getVisibleSubs(cat);
       subs += visibleSubs.length;
       for (const sub of visibleSubs) {

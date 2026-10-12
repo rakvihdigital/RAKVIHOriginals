@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { ShoppingCart, User, Heart, LogOut } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -56,10 +57,11 @@ export default function Header() {
     };
   }, [menuOpen]);
 
-  // NAVIGATION ITEMS: Collection Hub replacing Fashion Studio & Videos removed
+  // NAVIGATION ITEMS: All Collections & The Original Hub replacing Fashion Studio & Videos removed
   const navItems = [
     { name: "Home", href: "/" },
-    { name: "Collection Hub", href: "/collection-hub" },
+    { name: "All Collections", href: "/collection-hub" },
+    { name: "The Original Hub", href: "/original-hub" },
     { name: "Handbags", href: "/handbags" },
     { name: "Footwear", href: "/footwear" },
     { name: "Belts", href: "/belts" },
@@ -75,11 +77,16 @@ export default function Header() {
       {/* ── DESKTOP HEADER WITH LEFT BRAND TITLE & RIGHT EXPANDING DRAWER ── */}
       <header className={`desktop-header-bar ${scrolled ? "is-scrolled" : ""}`}>
         <div className="desktop-header-inner flex items-center justify-between w-full">
-          {/* Left Corner: Aesthetic Brand Title (Single line bold with rounded pill) */}
+          {/* Left Corner: Official Brand Logo */}
           <Link href="/" className="header-brand-mark" aria-label="RAKVIH Originals">
-            <span className="brand-mark-single-line">
-              RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
-            </span>
+            <Image
+              src="/rakvih-logo.png"
+              alt="RAKVIH Originals"
+              width={184}
+              height={23}
+              priority
+              className="header-brand-logo-img"
+            />
           </Link>
 
           {/* Right Side: Horizontal Expanding Drawer & Actions */}
@@ -242,11 +249,16 @@ export default function Header() {
 
       {/* ── MOBILE HEADER (MOBILE ONLY) ── */}
       <div className="mobile-header-bar">
-        {/* Left: Desktop-matching Single-line Brand Mark Pill */}
+        {/* Left: Official Brand Logo */}
         <Link href="/" className="header-brand-mark mobile-header-brand" aria-label="RAKVIH Originals">
-          <span className="brand-mark-single-line">
-            RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
-          </span>
+          <Image
+            src="/rakvih-logo.png"
+            alt="RAKVIH Originals"
+            width={144}
+            height={18}
+            priority
+            className="header-brand-logo-img"
+          />
         </Link>
 
         <div className="flex items-center gap-3">
@@ -299,9 +311,13 @@ export default function Header() {
               className="header-brand-mark mobile-sidebar-brand-mark"
               aria-label="RAKVIH Originals"
             >
-              <span className="brand-mark-single-line">
-                RAKVIH <span className="brand-sub-gold">ORIGINALS</span>
-              </span>
+              <Image
+                src="/rakvih-logo.png"
+                alt="RAKVIH Originals"
+                width={136}
+                height={17}
+                className="header-brand-logo-img"
+              />
             </Link>
             <button
               type="button"

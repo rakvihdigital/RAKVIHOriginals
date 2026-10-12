@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import Sidebar from "@/components/admin/Sidebar"; // Adjust path if your Sidebar is located elsewhere
 import { Menu } from "lucide-react";
 
@@ -40,7 +42,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className="exec-admin-main flex flex-col min-h-screen min-w-0">
 
         {/* Mobile Header Bar (Visible on mobile/tablet to toggle the drawer) */}
-        <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-6 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/10 lg:hidden">
+        <header className="sticky top-0 z-30 flex items-center justify-between h-16 px-4 sm:px-6 bg-[#0a0a0a]/90 backdrop-blur-md border-b border-white/10 lg:hidden">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileOpen(true)}
@@ -49,8 +51,20 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
             >
               <Menu className="w-5 h-5" />
             </button>
-            <span className="font-bold tracking-wider text-sm uppercase">RAKVIH Admin</span>
+            <Link href="/admin/dashboard" className="flex items-center" aria-label="RAKVIH Admin Dashboard">
+              <Image
+                src="/rakvih-logo.png"
+                alt="RAKVIH Originals"
+                width={140}
+                height={18}
+                priority
+                className="h-[18px] sm:h-5 w-auto object-contain"
+              />
+            </Link>
           </div>
+          <span className="text-[10px] sm:text-xs font-semibold tracking-widest text-[#c4a174] uppercase px-2.5 py-1 rounded-full bg-[#c4a174]/10 border border-[#c4a174]/20">
+            {role === "admin" ? "Console" : "Subadmin"}
+          </span>
         </header>
 
         {/* Main Body Children Container */}

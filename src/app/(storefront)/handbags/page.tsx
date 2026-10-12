@@ -265,7 +265,7 @@ export default function HandbagsPage() {
           )}
 
           {/* Bottom Salon Banner */}
-          <div className="subpage-ateliers-banner" style={{ marginTop: "5rem" }}>
+          <div className="subpage-ateliers-banner">
             <div className="ateliers-content">
               <span className="accent-label">Private Salon Experience</span>
               <h2>Bespoke Leather Monogramming & Appointments</h2>

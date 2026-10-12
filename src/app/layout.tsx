@@ -4,12 +4,28 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "RAKVIH Originals | Luxury Maison & Editions",
   description: "The premier destination for handcrafted luxury handbags, footwear, eyewear, and signature accessories.",
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/rakvih-icon.png", type: "image/png" },
+    ],
+    apple: [
+      { url: "/rakvih-icon.png" },
+    ],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem("rakvih_intro_seen")==="1")document.documentElement.classList.add("rk-intro-seen")}catch(e){}`,
+          }}
+        />
+        <link rel="preload" as="image" href="/rakvih-logo-mark.png" />
+        <link rel="preload" as="image" href="/rakvih-logo-originals.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://wneonnqavtbwziybbxaq.supabase.co" crossOrigin="anonymous" />

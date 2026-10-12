@@ -3,7 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Gem, Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
+import Image from "next/image";
+import { Lock, Mail, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -68,11 +69,15 @@ export default function AdminLoginPage() {
 
       <div className="login-container">
         {/* Brand Header */}
-        <div className="login-brand">
-          <div className="login-brand-icon">
-            <Gem size={28} />
-          </div>
-          <h1 className="login-brand-name">RAKVIH</h1>
+        <div className="login-brand" style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <Image
+            src="/rakvih-logo.png"
+            alt="RAKVIH Originals"
+            width={240}
+            height={30}
+            priority
+            style={{ height: "32px", width: "auto", objectFit: "contain", marginBottom: "12px" }}
+          />
           <p className="login-brand-tag">Executive Portal &amp; Atelier Console</p>
         </div>
 

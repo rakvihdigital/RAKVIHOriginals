@@ -6,13 +6,14 @@ import { fetchAllCollectionProducts, StoreProduct } from "@/lib/fetchProducts";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductGridSkeleton } from "@/components/ProductCardSkeleton";
 
-// Subcategory IDs strictly matching the 4 store pages
+// Subcategory IDs matching store pages and The Original Hub
 const CATEGORY_TABS = [
   { id: "all", name: "All Collections", subIds: null },
-  { id: "handbags", name: "Women's Handbags", subIds: [7] },
-  { id: "footwear", name: "Footwear", subIds: [1, 13] },
-  { id: "belts", name: "Signature Belts", subIds: [12, 55] },
-  { id: "stoles", name: "Luxury Stoles", subIds: [9] },
+  { id: "original-hub", name: "The Original Hub", subIds: [68, 69, 70, 71, 73, 74, 75] },
+  { id: "handbags", name: "Women's Handbags", subIds: [7, 68] },
+  { id: "footwear", name: "Footwear", subIds: [1, 13, 73] },
+  { id: "belts", name: "Signature Belts", subIds: [12, 55, 74] },
+  { id: "stoles", name: "Luxury Stoles", subIds: [9, 75] },
 ];
 
 export default function CollectionHubPage() {
@@ -63,6 +64,8 @@ export default function CollectionHubPage() {
       if (activeTabObj?.subIds) {
         result = result.filter((item) => {
           const subId = (item as any).subcategoryId ?? (item as any).subcategory_id;
+          const catId = (item as any).categoryId ?? (item as any).category_id;
+          if (activeTab === "original-hub" && catId === 5) return true;
           return subId && activeTabObj.subIds!.includes(Number(subId));
         });
       }
@@ -143,17 +146,17 @@ export default function CollectionHubPage() {
       <section className="subpage-hero">
         <div className="subpage-hero-inner">
           <div className="subpage-breadcrumbs">
-            <Link href="/">Home</Link> <span>/</span> <span className="active">Collection Hub</span>
+            <Link href="/">Home</Link> <span>/</span> <span className="active">All Collections</span>
           </div>
           <div className="hero-accent-line">
             <div className="accent-bar"></div>
             <span className="accent-label">The Complete Maison Universe</span>
           </div>
           <h1 className="subpage-title">
-            COLLECTION <span className="hero-title-stroke">HUB</span>
+            ALL <span className="hero-title-stroke">COLLECTIONS</span>
           </h1>
           <p className="subpage-subtitle">
-            Explore all luxury creations across Handbags, Footwear, Signature Belts, and Haute Stoles with real-time atelier filters.
+            Explore all luxury creations across Handbags, Footwear, Signature Belts, Haute Stoles, and The Original Hub with real-time atelier filters.
           </p>
         </div>
       </section>
@@ -356,7 +359,7 @@ export default function CollectionHubPage() {
           )}
 
           {/* Bottom Salon Banner */}
-          <div className="subpage-ateliers-banner" style={{ marginTop: "5rem" }}>
+          <div className="subpage-ateliers-banner">
             <div className="ateliers-content">
               <span className="accent-label">Private Salon Experience</span>
               <h2>Bespoke Personal Styling & VIP Viewing</h2>

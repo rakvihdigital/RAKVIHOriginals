@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import OptimizedImage from "@/components/OptimizedImage";
+import { applyStoreDiscount, STORE_WIDE_DISCOUNT } from "@/lib/fetchProducts";
 
 type Variation = {
   id: number;
@@ -55,7 +56,7 @@ const CURATED_SUBCATS: Record<string, string[]> = {
   unisex: ["Stoles"],
 };
 
-const HIDDEN_CATEGORIES = ["the original hub"];
+const EXCLUDED_CATEGORIES = ["watches"];
 
 const PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 350;
@@ -63,10 +64,6 @@ const SEARCH_DEBOUNCE_MS = 350;
 function getCuratedList(categoryName: string): string[] | null {
   const key = categoryName.trim().toLowerCase();
   return CURATED_SUBCATS[key] ?? null;
-}
-
-function isHiddenCategory(categoryName: string): boolean {
-  return HIDDEN_CATEGORIES.includes(categoryName.trim().toLowerCase());
 }
 
 function cleanImageUrl(raw: string | null | undefined): string | null {
@@ -174,8 +171,22 @@ export default function ProductsAdminPage() {
         return;
       }
 
-      setCategories((categoriesRes.data ?? []) as LookupRow[]);
-      setSubcategories((subcategoriesRes.data ?? []) as SubcategoryRow[]);
+      const allCategories = (categoriesRes.data ?? []) as LookupRow[];
+      const loadedCategories = allCategories.filter(
+        (c) => !EXCLUDED_CATEGORIES.includes(c.name.trim().toLowerCase()) && c.id !== 8
+      );
+      const excludedCatIds = new Set(
+        allCategories
+          .filter((c) => EXCLUDED_CATEGORIES.includes(c.name.trim().toLowerCase()) || c.id === 8)
+          .map((c) => c.id)
+      );
+
+      setCategories(loadedCategories);
+      setSubcategories(
+        ((subcategoriesRes.data ?? []) as SubcategoryRow[]).filter(
+          (s) => s.category_id == null || !excludedCatIds.has(s.category_id)
+        )
+      );
       setSubSubcategories((subSubRes.data ?? []) as LookupRow[]);
       setBrands(
         ((brandsRes.data ?? []) as { id: number; name_en: string }[]).map((b) => ({
@@ -211,10 +222,7 @@ export default function ProductsAdminPage() {
     [attributes]
   );
 
-  const visibleCategoryOptions = useMemo(
-    () => categories.filter((c) => !isHiddenCategory(c.name)),
-    [categories]
-  );
+  const visibleCategoryOptions = categories;
 
   // Subcategory filter options — scoped to the selected category and,
   // for curated categories, restricted to the curated allow-list only.
@@ -234,10 +242,10 @@ export default function ProductsAdminPage() {
   }, [subcategories, categoryFilter, categoryById]);
 
   // ── Build the "which category/subcategory combos are allowed" filter ──
-  // This encodes the same visibility rule as before (hidden categories
-  // never show; curated categories only show their curated
-  // subcategories) but as a server-side .or() filter, so pagination and
-  // counts are correct instead of being computed after over-fetching.
+  // This encodes the same visibility rule as before (curated categories
+  // only show their curated subcategories) but as a server-side .or()
+  // filter, so pagination and counts are correct instead of being
+  // computed after over-fetching.
   const visibilityOrFilter = useMemo(() => {
     if (lookupsLoading) return null;
 
@@ -245,7 +253,6 @@ export default function ProductsAdminPage() {
     const curatedClauses: string[] = [];
 
     for (const cat of categories) {
-      if (isHiddenCategory(cat.name)) continue;
       const curated = getCuratedList(cat.name);
       if (!curated) {
         nonCuratedVisibleIds.push(cat.id);
@@ -343,6 +350,8 @@ export default function ProductsAdminPage() {
       } else if (visibilityOrFilter) {
         q = q.or(visibilityOrFilter);
       }
+      // Strictly exclude Watches from admin products
+      q = q.neq("category_id", 8);
       if (debouncedQuery) {
         const term = debouncedQuery.replace(/[%,]/g, "");
         q = q.or(`name.ilike.%${term}%,sku.ilike.%${term}%`);
@@ -396,18 +405,49 @@ export default function ProductsAdminPage() {
     return parts.length > 0 ? parts.join(" / ") : "Uncategorized";
   }
 
-  function priceRange(p: Product): { label: string; sub: string | null } {
+  function priceRange(p: Product): {
+    finalLabel: string;
+    origLabel: string | null;
+    discountPercent: number | null;
+    sub: string | null;
+  } {
     const vars = p.product_variations ?? [];
-    if (vars.length === 0) return { label: "No variations", sub: null };
-    const prices = vars.map((v) => Number(v.price));
-    const min = Math.min(...prices);
-    const max = Math.max(...prices);
-    const label =
-      min === max
-        ? `₹${min.toLocaleString()}`
-        : `₹${min.toLocaleString()} – ₹${max.toLocaleString()}`;
+    if (vars.length === 0) {
+      return { finalLabel: "No variations", origLabel: null, discountPercent: null, sub: null };
+    }
+
+    const rawPrices = vars.map((v) => Number(v.price) || 0);
+    const finalPrices = vars.map((v) =>
+      applyStoreDiscount(Number(v.price) || 0, v.sale_price != null ? Number(v.sale_price) : null)
+    );
+
+    const minFinal = Math.min(...finalPrices);
+    const maxFinal = Math.max(...finalPrices);
+    const minRaw = Math.min(...rawPrices);
+    const maxRaw = Math.max(...rawPrices);
+
+    const isDiscounted = minFinal < minRaw || maxFinal < maxRaw;
+    const discountPercent = Math.round(STORE_WIDE_DISCOUNT * 100);
+
+    const finalLabel =
+      minFinal === maxFinal
+        ? `₹${minFinal.toLocaleString()}`
+        : `₹${minFinal.toLocaleString()} – ₹${maxFinal.toLocaleString()}`;
+
+    const origLabel =
+      isDiscounted
+        ? minRaw === maxRaw
+          ? `₹${minRaw.toLocaleString()}`
+          : `₹${minRaw.toLocaleString()} – ₹${maxRaw.toLocaleString()}`
+        : null;
+
     const totalStock = vars.reduce((sum, v) => sum + (v.stock ?? 0), 0);
-    return { label, sub: `${vars.length} variant${vars.length === 1 ? "" : "s"} · ${totalStock} in stock` };
+    return {
+      finalLabel,
+      origLabel,
+      discountPercent: isDiscounted ? discountPercent : null,
+      sub: `${vars.length} variant${vars.length === 1 ? "" : "s"} · ${totalStock} in stock`,
+    };
   }
 
   function stockBadge(p: Product): { text: string; cls: string } | null {
@@ -648,7 +688,15 @@ export default function ProductsAdminPage() {
                           </div>
 
                           <div>
-                            <span className="prod-card-price">{price.label}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                              <span className="prod-card-price">{price.finalLabel}</span>
+                              {price.origLabel && (
+                                <span className="prod-card-orig-price">{price.origLabel}</span>
+                              )}
+                              {price.discountPercent && (
+                                <span className="prod-discount-pill">{price.discountPercent}% OFF</span>
+                              )}
+                            </div>
                             {price.sub && <span className="prod-card-price-sub">{price.sub}</span>}
                           </div>
 
@@ -736,28 +784,40 @@ export default function ProductsAdminPage() {
                                     <tr>
                                       <th>Color</th>
                                       <th>Size</th>
-                                      <th>Price</th>
+                                      <th>Regular Price</th>
+                                      <th>Final Price (15% OFF)</th>
                                       <th>Stock</th>
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {productVariations.map((v) => (
-                                      <tr key={v.id}>
-                                        <td>{v.color_id != null ? attrById.get(v.color_id) ?? "—" : "—"}</td>
-                                        <td>{v.size_id != null ? attrById.get(v.size_id) ?? "—" : "—"}</td>
-                                        <td>
-                                          <span className="prod-var-price">
-                                            ₹{Number(v.price).toLocaleString()}
-                                          </span>
-                                          {v.sale_price != null && (
-                                            <span className="prod-var-sale">
-                                              sale ₹{Number(v.sale_price).toLocaleString()}
+                                    {productVariations.map((v) => {
+                                      const rawP = Number(v.price) || 0;
+                                      const finalP = applyStoreDiscount(rawP, v.sale_price != null ? Number(v.sale_price) : null);
+                                      const hasDiscount = finalP < rawP;
+                                      const discPercent = rawP > 0 && hasDiscount ? Math.round(((rawP - finalP) / rawP) * 100) : null;
+                                      return (
+                                        <tr key={v.id}>
+                                          <td>{v.color_id != null ? attrById.get(v.color_id) ?? "—" : "—"}</td>
+                                          <td>{v.size_id != null ? attrById.get(v.size_id) ?? "—" : "—"}</td>
+                                          <td>
+                                            <span className={hasDiscount ? "prod-var-orig" : "prod-var-price"}>
+                                              ₹{rawP.toLocaleString()}
                                             </span>
-                                          )}
-                                        </td>
-                                        <td>{v.stock ?? 0}</td>
-                                      </tr>
-                                    ))}
+                                          </td>
+                                          <td>
+                                            <span className="prod-var-final">
+                                              ₹{finalP.toLocaleString()}
+                                            </span>
+                                            {discPercent != null && (
+                                              <span className="prod-discount-pill">
+                                                {discPercent}% OFF
+                                              </span>
+                                            )}
+                                          </td>
+                                          <td>{v.stock ?? 0}</td>
+                                        </tr>
+                                      );
+                                    })}
                                   </tbody>
                                 </table>
                               )}

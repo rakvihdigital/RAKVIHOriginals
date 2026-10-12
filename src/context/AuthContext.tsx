@@ -126,7 +126,7 @@ const AuthContext = createContext<AuthContextType | undefined>(
    which table (`customers` or `users`) that id came from.
 ===================================================== */
 
-const CART_STORAGE_KEY = "rakvih_user_cart_v1";
+const CART_STORAGE_KEY = "rakvih_user_cart_v2"; // v2: reset carts saved before the 15% store-wide discount
 const WISHLIST_STORAGE_KEY = "rakvih_user_wishlist_v1";
 const SESSION_STORAGE_KEY = "rakvih_customer_session_v1";
 

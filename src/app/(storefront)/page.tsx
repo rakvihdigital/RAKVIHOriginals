@@ -3,24 +3,26 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { initScrollSequence } from '@/hooks/useScrollSequence';
-import { fetchHomepage4CategoriesLatest, Homepage4Categories } from '@/lib/fetchProducts';
+import { fetchProductsBySubcategoryIds, Homepage4Categories } from '@/lib/fetchProducts';
 import { ProductCard } from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 
 export default function Home() {
-    const [categoriesData, setCategoriesData] = useState<Homepage4Categories | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const [categoriesData, setCategoriesData] = useState<Partial<Homepage4Categories>>({});
 
     useEffect(() => {
-        initScrollSequence();
-
-        async function loadData() {
-            setIsLoading(true);
-            const data = await fetchHomepage4CategoriesLatest(8);
-            setCategoriesData(data);
-            setIsLoading(false);
+        let cancelled = false;
+        // Start product requests before initializing the frame animation.
+        const categories: [keyof Homepage4Categories, number[]][] = [
+            ['handbags', [7]], ['footwear', [1, 13]], ['belts', [12, 55]], ['stoles', [9]],
+        ];
+        for (const [category, ids] of categories) {
+            fetchProductsBySubcategoryIds(ids, 8).then((products) => {
+                if (!cancelled) setCategoriesData((current) => ({ ...current, [category]: products }));
+            });
         }
-        loadData();
+        const destroyScrollSequence = initScrollSequence();
+        return () => { cancelled = true; destroyScrollSequence(); };
     }, []);
 
     return (
@@ -175,7 +177,7 @@ export default function Home() {
                 </div>
 
                 <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
-                    {isLoading ? (
+                    {!categoriesData.handbags ? (
                         <ProductGridSkeleton count={8} />
                     ) : Array.isArray(categoriesData?.handbags) && categoriesData.handbags.length > 0 ? (
                         categoriesData.handbags.slice(0, 8).map((product) => (
@@ -318,7 +320,7 @@ export default function Home() {
                 </div>
 
                 <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
-                    {isLoading ? (
+                    {!categoriesData.footwear ? (
                         <ProductGridSkeleton count={8} />
                     ) : categoriesData?.footwear && categoriesData.footwear.length > 0 ? (
                         categoriesData.footwear.slice(0, 8).map((product) => (
@@ -460,7 +462,7 @@ export default function Home() {
                 </div>
 
                 <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
-                    {isLoading ? (
+                    {!categoriesData.belts ? (
                         <ProductGridSkeleton count={8} />
                     ) : categoriesData?.belts && categoriesData.belts.length > 0 ? (
                         categoriesData.belts.slice(0, 8).map((product) => (
@@ -602,7 +604,7 @@ export default function Home() {
                 </div>
 
                 <div className="luxury-product-grid-v2" style={{ gap: "1rem" }}>
-                    {isLoading ? (
+                    {!categoriesData.stoles ? (
                         <ProductGridSkeleton count={8} />
                     ) : categoriesData?.stoles && categoriesData.stoles.length > 0 ? (
                         categoriesData.stoles.slice(0, 8).map((product) => (

@@ -52,7 +52,7 @@ export default function CheckoutPage() {
   if (!isAuthenticated) {
     return (
       <main className="subpage-wrapper">
-        <section style={{ padding: "8rem 0" }}>
+        <section style={{ padding: "4rem 0" }}>
           <div className="subpage-container" style={{ textAlign: "center", maxWidth: "550px", margin: "0 auto" }}>
             <div className="auth-card-wrap">
               <span className="brand-gold-badge" style={{ marginBottom: "1rem" }}>
@@ -77,7 +77,7 @@ export default function CheckoutPage() {
   if (cart.length === 0) {
     return (
       <main className="subpage-wrapper">
-        <section style={{ padding: "8rem 0" }}>
+        <section style={{ padding: "4rem 0" }}>
           <div className="subpage-container" style={{ textAlign: "center", maxWidth: "600px", margin: "0 auto" }}>
             <div className="auth-card-wrap">
               <h2 style={{ fontFamily: "var(--font-display)", fontSize: "2rem", color: "#ffffff", marginBottom: "0.5rem" }}>
@@ -87,7 +87,7 @@ export default function CheckoutPage() {
                 Please add items to your shopping bag before proceeding to checkout.
               </p>
               <Link href="/collection-hub" className="hero-cta-pill">
-                Explore Collection Hub
+                Explore All Collections
               </Link>
             </div>
           </div>
