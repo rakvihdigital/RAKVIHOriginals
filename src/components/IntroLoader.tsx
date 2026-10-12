@@ -17,9 +17,9 @@ import { useEffect, useState } from "react";
  */
 
 const SESSION_KEY = "rakvih_intro_seen";
-const MIN_DISPLAY_MS = 3000; // let the animation play fully
-const MAX_DISPLAY_MS = 6000; // never block the site longer than this
-const EXIT_MS = 1100;
+const MIN_DISPLAY_MS = 1200; // brief cinematic brand reveal
+const MAX_DISPLAY_MS = 2200; // never block the site or user interactions
+const EXIT_MS = 600;
 
 type Phase = "playing" | "exiting" | "done";
 
@@ -46,7 +46,7 @@ export default function IntroLoader() {
     root.classList.add("rk-intro-active");
 
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const minTime = reduceMotion ? 900 : MIN_DISPLAY_MS;
+    const minTime = reduceMotion ? 600 : MIN_DISPLAY_MS;
     const start = performance.now();
 
     let loaded = document.readyState === "complete";
@@ -63,12 +63,13 @@ export default function IntroLoader() {
       } catch {
         /* ignore */
       }
+      // Unlock scroll immediately when curtains start parting
+      root.classList.remove("rk-intro-active");
       setPhase("exiting");
       timers.push(
         setTimeout(() => {
-          root.classList.remove("rk-intro-active");
           setPhase("done");
-        }, reduceMotion ? 300 : EXIT_MS)
+        }, reduceMotion ? 200 : EXIT_MS)
       );
     };
 

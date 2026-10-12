@@ -1350,12 +1350,12 @@ ul {
 }
 
 .hero-scroll-container {
-    height: 850vh;
+    height: 480vh;
     position: relative;
 }
 
 #hero .hero-scroll-container {
-    height: 1100vh;
+    height: 600vh;
 }
 
 #hero2 .hero-scroll-container,
@@ -1363,7 +1363,7 @@ ul {
 #hero4 .hero-scroll-container,
 #hero5 .hero-scroll-container,
 #hero6 .hero-scroll-container {
-    height: 850vh;
+    height: 480vh;
 }
 
 .hero-sticky {
@@ -3204,11 +3204,11 @@ ul {
     }
 
     .hero-scroll-container {
-        height: 1400vh;
+        height: 440vh;
     }
 
     #hero .hero-scroll-container {
-        height: 2000vh;
+        height: 520vh;
     }
 
     #hero2 .hero-scroll-container,
@@ -3216,7 +3216,7 @@ ul {
     #hero4 .hero-scroll-container,
     #hero5 .hero-scroll-container,
     #hero6 .hero-scroll-container {
-        height: 1400vh;
+        height: 440vh;
     }
 
     #hero-text-6 {
@@ -3312,11 +3312,11 @@ ul {
     }
 
     .hero-scroll-container {
-        height: 1200vh;
+        height: 400vh;
     }
 
     #hero .hero-scroll-container {
-        height: 1800vh;
+        height: 460vh;
     }
 
     #hero2 .hero-scroll-container,
@@ -3324,7 +3324,7 @@ ul {
     #hero4 .hero-scroll-container,
     #hero5 .hero-scroll-container,
     #hero6 .hero-scroll-container {
-        height: 1200vh;
+        height: 400vh;
     }
 
     .lc-title {
